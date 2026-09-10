@@ -4,6 +4,8 @@
 
 This project targets the Audi **MHI2Q / MIB2 High** platform and combines **CarPlay Route Guidance (RGI)** with **MMI Mirror**. CarPlay RGI extends CarPlay navigation guidance and related interactions to the **Virtual Cockpit / HUD**, while MMI Mirror mirrors the current MMI head-unit display in real time to the map area of the Virtual Cockpit. Installation, startup, diagnostics, and recovery are managed through the Green Engineering Menu.
 
+(This version is a working build that mirrors the MMI screen display in real time. However, it lacks adaptation for the sports layout, and some elements are occluded when displayed on the large screen. Due to reselling by "opportunists" during testing, updates for subsequent versions have been suspended.)
+
 > **Important: RGI and MMI Mirror are installed separately.** To use **CarPlay RGI + MMI Mirror** together, you must **install CarPlay RGI first, then install MMI Mirror**. `Install/Update MMI Mirror` does not install CarPlay RGI. If RGI has not already been installed, that procedure installs MMI Mirror only.
 
 <img width="1920" height="1080" alt="bec01c5da5752c99fe7f3ac76b6bb919" src="https://github.com/user-attachments/assets/ec0417cc-0651-45c6-905d-9b12ce3a2ffc" />
