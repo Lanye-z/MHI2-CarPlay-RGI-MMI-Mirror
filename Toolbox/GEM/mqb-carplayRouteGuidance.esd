@@ -1,0 +1,38 @@
+###########################################################################################
+#
+# Custom Green Engineering Menu screen
+# Author:       lanye
+# Version:      4.2A
+# Disclaimer:   THIS SCREEN WILL VOID YOUR WARRANTY
+#
+###########################################################################################
+#
+# Main -> MQBCoding -> Customization -> CarPlay Route Guidance
+#
+###########################################################################################
+screen "CarPlay Route Guidance" Customization
+
+keyValue
+    value   String sys 0x00000000 0
+    label   "CarPlay RGI is for MHI2Q route guidance rendering."
+    poll    0
+
+script
+   value   sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/install_carplay_rgi.sh"
+   label   "Install/Update CarPlay Route Guidance Interface"
+
+script
+   value   sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/uninstall_carplay_rgi.sh"
+   label   "Restore/Uninstall CarPlay Route Guidance Interface"
+
+script
+   value   sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/rescue_carplay_rgi.sh"
+   label   "RESCUE - Force Restore Stock CarPlay / Remove RGI"
+
+script
+   value   sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/collect_carplay_rgi_logs.sh"
+   label   "Copy CarPlay RGI runtime logs to SD-card"
+
+script
+   value   sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/clear_carplay_rgi_logs.sh"
+   label   "Clear CarPlay RGI runtime logs"

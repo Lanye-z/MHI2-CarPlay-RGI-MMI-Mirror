@@ -1,0 +1,55 @@
+###########################################################################################
+#
+# Custom Green Engineering Menu screen
+# Author:       Jille & Olli
+# Version:      4.2A
+# Disclaimer:   THIS SCREEN WILL VOID YOUR WARRANTY
+#
+###########################################################################################
+#
+# Main -> MQBCoding -> Customization -> Language
+#
+###########################################################################################
+screen  Language Customization
+
+keyValue
+    value	String sys 0x00000000 0
+    label   "WARNING: Make sure your .res file is compatible with your firmware version!"
+    poll    0  
+
+keyValue
+    value	String sys 0x00000000 0
+    label   "This screen can be used to copy and replace language files of the MIB."
+    poll    0  
+
+keyValue
+    value   String sys 0x00000000 0
+    label   ".res files go into the according Custom/Language skin folder on SD."
+    poll    0  
+
+keyValue
+    value   String sys 0x00000000 0
+    label   "Reboot after replacing language files."
+    poll    0      
+	
+keyValue
+    value   String sys 0x00000000 0
+    label   ""
+    poll    0    
+    
+script
+   value    sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/install_language_VW_SK_SE.sh"
+   label    "Install new language files from SD"
+
+keyValue
+    value   String sys 0x00000000 0
+    label   ""
+    poll    0  
+
+script
+   value    sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/recovery_language.sh"
+   label    "Recover language files from backup"	
+
+script
+	value 	sys 1 0x0100 "/scripts/performePersReset.sh"
+	label 	"Reboot"

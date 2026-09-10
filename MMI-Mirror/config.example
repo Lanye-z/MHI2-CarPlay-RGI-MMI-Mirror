@@ -1,0 +1,28 @@
+# Developer-side MMI Mirror tuning example.
+# Production safety-critical routing/seam values are deliberately not configurable.
+
+MMI_CAPTURE_FPS=30
+MMI_CAPTURE_RECOVER_MS=3000
+MMI_HMI_POLL_MS=100
+
+MMI_CLASSIC_FULL_SCALE=0.80
+MMI_CLASSIC_FULL_OFFSET_X=0
+MMI_CLASSIC_FULL_OFFSET_Y=0
+MMI_CLASSIC_SMALL_SCALE=0.80
+MMI_CLASSIC_SMALL_OFFSET_X=0
+MMI_CLASSIC_SMALL_OFFSET_Y=0
+MMI_SPORT_FULL_SCALE=0.80
+MMI_SPORT_FULL_OFFSET_X=0
+MMI_SPORT_FULL_OFFSET_Y=0
+MMI_SPORT_SMALL_SCALE=0.80
+MMI_SPORT_SMALL_OFFSET_X=0
+MMI_SPORT_SMALL_OFFSET_Y=0
+
+MMI_MIRROR_LOG=/tmp/mmi-mirror-display.log
+MMI_MIRROR_LOG_MAX_BYTES=524288
+
+# Compatibility aliases still accepted by the launcher when present in an old
+# config.local, but new configurations should use the four profiles above.
+# MMI_CONTENT_SCALE=0.80
+# MMI_OFFSET_X=0
+# MMI_OFFSET_Y=0

@@ -1,0 +1,53 @@
+###########################################################################################
+#
+# Custom Green Engineering Menu screen
+# MMI Mirror
+#
+###########################################################################################
+#
+# Main -> MQBCoding -> Customization -> MMI Mirror
+#
+###########################################################################################
+screen "MMI Mirror" Customization
+
+keyValue
+    value   String sys 0x00000000 0
+    label   "Audi MHI2Q MMI Mirror"
+    poll    0
+
+keyValue
+    value   String sys 0x00000000 0
+    label   "For RGI + MMI Mirror, install CarPlay RGI first"
+    poll    0
+
+script
+   value   sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/install_mmi_mirror.sh"
+   label   "Install/Update MMI Mirror"
+
+script
+   value   sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/start_mmi_mirror_toolbox.sh"
+   label   "Start MMI Mirror"
+
+script
+   value   sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/stop_mmi_mirror_toolbox.sh"
+   label   "Stop MMI Mirror"
+
+script
+   value   sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/autostart_mmi_mirror_on.sh"
+   label   "AutoStart ON - start after MMI boot"
+
+script
+   value   sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/autostart_mmi_mirror_off.sh"
+   label   "AutoStart OFF - manual start only"
+
+script
+   value   sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/collect_mmi_mirror_logs.sh"
+   label   "Copy MMI Mirror diagnostics to SD-card"
+
+script
+   value   sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/clear_mmi_mirror_logs.sh"
+   label   "Clear temporary MMI Mirror logs"
+
+script
+   value   sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/uninstall_mmi_mirror.sh"
+   label   "Restore/Uninstall MMI Mirror"

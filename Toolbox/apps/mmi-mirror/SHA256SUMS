@@ -1,0 +1,5 @@
+# MMI Mirror final-cleanup vehicle-candidate manifest.
+# These three files form the exact on-SD artifact set for final vehicle validation.
+987cab99fb79b5a45c7a63521805429022790031f98e4305b38233e87e8b3638  mmi-mirror-display
+fa7511b9d6d10ba2a888f03d9b291ef4049fd7defa66d4daf8c56e7c7c4a2c1a  carplay_hook-unified.jar
+0ef8a2a70e0aa02f595598960f35d82257f7367eb99acf37566327038c5a9cd8  maneuver_render-rgi98

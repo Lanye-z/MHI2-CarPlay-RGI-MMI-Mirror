@@ -1,0 +1,12 @@
+FileName = "cleanup.sh"
+FileSize = "678"
+CheckSum = "5ae4561eeedd311de7ed6034f5066b0803956a40"
+
+FileName = "finalScript.sh"
+FileSize = "1063"
+CheckSum = "5478e2177180c1654b2fbe2ea307078eb1ea0a26"
+
+FileName = "install_scripts.sh"
+FileSize = "565"
+CheckSum = "9b6b9345f09da85254e1c545d1a457ab18d0a9d1"
+

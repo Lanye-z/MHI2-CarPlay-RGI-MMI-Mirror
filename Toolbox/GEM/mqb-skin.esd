@@ -1,0 +1,117 @@
+###########################################################################################
+#
+# Custom Green Engineering Menu screen
+# Author:       Jille & Olli
+# Version:      4.2A
+# Disclaimer:   THIS SCREEN WILL VOID YOUR WARRANTY
+#
+###########################################################################################
+#
+# Main -> MQBCoding -> Customization -> Skin
+#
+###########################################################################################
+screen  Skin Customization
+
+keyValue
+    value	String sys 0x00000000 0
+    label   "This screen can be used to replace skin-graphics of the MIB."
+    poll    0  
+	
+keyValue
+    value   String sys 0x00000000 0
+    label   ""
+    poll    0  
+	
+keyValue
+    value   String sys 0x00000000 0
+    label   "--- Scripts for SEAT, SKODA and VW (other brands below!)---"
+    poll    0  	
+
+keyValue
+    value   String sys 0x00000000 0
+    label   "images.mcf-files and ambienceColorMap.res go into the matching"
+    poll    0  
+
+keyValue
+    value   String sys 0x00000000 0
+    label   "Custom/Skinfiles/skinX folder."
+    poll    0      
+
+keyValue
+    value   String sys 0x00000000 0
+    label   "Reboot after installing a new skin or ambienceColorMap."
+    poll    0      
+	
+keyValue
+    value   String sys 0x00000000 0
+    label   ""
+    poll    0  
+
+script
+   value    sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/install_skins_VW_SK_SE.sh"
+   label    "Install graphics/ambient colors for skins from SD"  
+
+keyValue
+    value   String sys 0x00000000 0
+    label   ""
+    poll    0    
+
+script
+   value    sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/recovery_skins.sh"
+   label    "Recover all skins and ambienceColorMaps from backup"   
+   
+script
+	value 	sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/util_reboot.sh"
+	label 	"Reboot"
+   
+keyValue
+	value 	String per 1 0x00010003
+    label 	"_____________________________________________________________________________"
+    poll     500
+
+keyValue
+    value   String sys 0x00000000 0
+    label   "--- Scripts for AUDI, BENTLEY, LAMBORGHINI and PORSCHE ---"
+    poll    0 
+
+keyValue
+    value   String sys 0x00000000 0
+    label   "Custom skin graphics go into accodring folders in Custom/Skinfiles/BRAND."
+    poll    0 
+
+keyValue
+    value   String sys 0x00000000 0
+    label   "Custom car graphics content.kzb file go into Custom/Skinfiles/BRAND-Car."
+    poll    0 
+	
+keyValue
+    value   String sys 0x00000000 0
+    label   "Reboot after installing a new skin or car graphics."
+    poll    0  
+	
+keyValue
+    value   String sys 0x00000000 0
+    label   ""
+    poll    0  
+	
+script
+   value    sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/install_skin_AU_PO_BE_LA.sh"
+   label    "Install new skin graphics from /Skinfiles/BRAND on SD" 	
+   
+script
+   value    sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/install_skin_car_AU_PO_BE_LA.sh"
+   label    "Install new car graphics from /Skinfiles/BRAND-Car on SD" 	
+   
+keyValue
+    value   String sys 0x00000000 0
+    label   ""
+    poll    0    
+
+script
+   value    sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/recovery_skins.sh"
+   label    "Recover skin and car graphics from backup" 
+
+script
+	value 	sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/util_reboot.sh"
+	label 	"Reboot" 
+   
