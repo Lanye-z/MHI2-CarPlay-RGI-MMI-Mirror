@@ -24,10 +24,8 @@ https://github.com/user-attachments/assets/6c3c6d34-4d87-4251-b04e-93c984747264
 
 - **CarPlay Route Guidance（RGI）**
   - 将 CarPlay 导航的转向、下一操作距离、距离进度、ETA、目的地等路线信息扩展至 Virtual Cockpit / HUD，并支持导航提供的 HUD 车道引导信息。
-  - 通过 MOST 视频显示链路在仪表地图区域绘制 CarPlay 导航转向提示；无路线引导时保持原有地图显示。
   - 支持将 CarPlay 专辑封面转发到 Virtual Cockpit 的媒体界面。
   - 支持 **MMI 触控板 → DPAD** 输入桥接，可通过触控板滑动操作 CarPlay 菜单。
-  - 保留方向盘滚轮的原车地图缩放交互，并可通过确认键切换仪表路线信息显示。
 - **MMI Mirror**：将 MMI 中控画面实时镜像到 Virtual Cockpit 的地图显示区域。
 - **RGI + MMI Mirror 组合使用**：在已经正确安装 CarPlay RGI 的基础上安装 MMI Mirror，使 RGI 与 MMI 镜像在同一套仪表显示环境中协同工作。
 - **Toolbox 集成**：通过 Green Engineering Menu 完成 RGI 与 MMI Mirror 的安装、更新、日志收集和恢复，并提供 MMI Mirror 的启动、停止与 AutoStart，无需 SSH 执行日常操作。
