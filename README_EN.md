@@ -18,10 +18,8 @@ https://github.com/user-attachments/assets/6c3c6d34-4d87-4251-b04e-93c984747264
 
 - **CarPlay Route Guidance (RGI)**
   - Extends CarPlay route information such as maneuvers, distance to the next action, distance progress, ETA, and destination information to the Virtual Cockpit / HUD, including lane guidance when provided by the navigation app.
-  - Draws CarPlay maneuver guidance in the cluster map area through the MOST video display path; the original map remains available when no active route guidance is present.
   - Supports forwarding CarPlay album artwork to the Virtual Cockpit media display.
   - Supports **MMI touchpad → DPAD** input bridging, allowing CarPlay menus to be controlled using touchpad swipe gestures.
-  - Preserves the OEM steering-wheel scroll-wheel interaction for map zoom and supports switching route-information views with the confirmation button.
 - **MMI Mirror**: Mirrors the complete MMI center display in real time to the map area of the Virtual Cockpit.
 - **RGI + MMI Mirror combination**: Installs MMI Mirror on top of a correctly installed CarPlay RGI environment so that RGI and MMI mirroring can work together within the same cluster display environment.
 - **Toolbox integration**: Uses the Green Engineering Menu to install, update, collect logs, and restore both RGI and MMI Mirror, while also providing Start, Stop, and AutoStart controls for MMI Mirror. No SSH is required for normal day-to-day operation.
