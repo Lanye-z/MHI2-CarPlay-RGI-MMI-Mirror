@@ -6,10 +6,10 @@
 
 (此版本为可用版，将全程镜像MMI屏幕画面，同时缺少针对运动布局的适配，且大屏显示也存在部分遮挡，因测试过程中出现“聪明人”倒卖现象，后续版本暂停更新)
 
-> **重要：RGI 与 MMI Mirror 是两个独立安装步骤。** 如果需要同时使用 **CarPlay RGI + MMI Mirror**，必须**先安装 CarPlay RGI，再安装 MMI Mirror**。`Install/Update MMI Mirror` 不会代替 CarPlay RGI 的安装；如果未预先安装 RGI，则该流程只安装 MMI Mirror。
+> **重要：RGI 与 MMI Mirror 是两个独立安装步骤。** 如果需要同时使用 **CarPlay RGI + MMI Mirror**，必须**先安装 CarPlay RGI，再安装 MMI Mirror**。`Install/Update MMI Mirror` 不会代替 CarPlay RGI 的安装；如果未预先安装 RGI，则该流程只安装 MMI Mirror。**此外，部分车机似乎会出现carplay界面花屏现象，如出现此现象，请卸载RGI，单独使用mmi镜像**
 
+<img width="1706" height="1279" alt="78c1d9176274d9552a4bd88f9d2273cf" src="https://github.com/user-attachments/assets/97a82434-165c-486f-9cba-3e46c147bc50" />
 
-<img width="1920" height="1080" alt="bec01c5da5752c99fe7f3ac76b6bb919" src="https://github.com/user-attachments/assets/ec0417cc-0651-45c6-905d-9b12ce3a2ffc" />
 
 
 <img width="1920" height="1080" alt="ebcac200dc8a2d82bfc4161e03833d49" src="https://github.com/user-attachments/assets/834a1d7f-2642-43cf-95b6-23eb6f6c184f" />
