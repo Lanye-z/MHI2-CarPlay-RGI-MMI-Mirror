@@ -1,0 +1,46 @@
+name: One-time RGI artifact sync
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/sync-rgi-legacy-backup.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync four RGI artifacts from main-legacy-backup
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git clone "https://x-access-token:${GH_TOKEN}@github.com/Lanye-z/MHI2Q-CarPlay-RGI-MMI-Mirror.git" target
+          git clone --depth 1 --branch main-legacy-backup https://github.com/Lanye-z/mib2q-carplay-rgi-cn.git source
+
+          mkdir -p target/Toolbox/apps/carplay-rgi
+          cp source/release/carplay_hook.jar target/Toolbox/apps/carplay-rgi/carplay_hook.jar
+          cp source/release/libcarplay_hook.so target/Toolbox/apps/carplay-rgi/libcarplay_hook.so
+          cp source/release/maneuver_render target/Toolbox/apps/carplay-rgi/maneuver_render
+          cp source/release/flag_atlas.rgba target/Toolbox/apps/carplay-rgi/flag_atlas.rgba
+
+          cmp source/release/carplay_hook.jar target/Toolbox/apps/carplay-rgi/carplay_hook.jar
+          cmp source/release/libcarplay_hook.so target/Toolbox/apps/carplay-rgi/libcarplay_hook.so
+          cmp source/release/maneuver_render target/Toolbox/apps/carplay-rgi/maneuver_render
+          cmp source/release/flag_atlas.rgba target/Toolbox/apps/carplay-rgi/flag_atlas.rgba
+
+          cd target
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -f .github/workflows/sync-rgi-legacy-backup.yml
+          git add Toolbox/apps/carplay-rgi/carplay_hook.jar \
+                  Toolbox/apps/carplay-rgi/libcarplay_hook.so \
+                  Toolbox/apps/carplay-rgi/maneuver_render \
+                  Toolbox/apps/carplay-rgi/flag_atlas.rgba \
+                  .github/workflows/sync-rgi-legacy-backup.yml
+          git commit -m "Sync RGI artifacts from main-legacy-backup"
+          git push origin HEAD:main
