@@ -1,302 +1,368 @@
-# MHI2Q CarPlay 仪表多层显示开发工作区
-这个分支镜像完整 MMI 画面，不区分是否开启 CarPlay；RGI 与 MMI 镜像可以同步运行。现在可通过 Green Menu 单独开启或关闭上车自启动。
+# MIB2 Toolbox — CarPlay RGI + MMI Mirror
 
-本仓库用于 Audi **MHI2Q** Virtual Cockpit 的 CarPlay RGI + BaseVideo 多层显示实验。当前 `v2.2-final-cleanup` 已完成 V2A 迁移框架清理、Native/JAR 重建与静态验收，并回移 V2.3 已验证的 RGI Layout-derived geometry；清理前基线冻结在 `backup-v2.2-pre-final-cleanup-20260907`。当前状态为 **ARTIFACT VERIFIED / VEHICLE PENDING**。
+[English](README_EN.md) | 简体中文
 
-## 最终架构
+本项目面向 Audi **MHI2Q / MIB2 High** 平台，将 **CarPlay Route Guidance（RGI）** 与 **MMI Mirror** 组合使用。CarPlay RGI 负责将 CarPlay 导航引导与相关交互扩展至 **Virtual Cockpit / HUD**，MMI Mirror 则将 MMI 中控画面实时镜像至 Virtual Cockpit 的地图显示区域，并通过 Green Engineering Menu 完成安装、启动、诊断与恢复。
 
-```text
-                    Unified carplay_hook.jar
-                              │
-             ┌────────────────┼────────────────┐
-             ↓                ↓                ↓
-        Layout/View       Context          RGI HMI
-          observer       controller         bridge
-             │                │                │
-             └────────────────┼────────────────┘
-                              ↓
-                       terminal1 / ctx80
-                    ctx80={98,101,102,3}
-                         │            │
-                  displayable98  displayable3
-                         │            │
-                        RGI       BaseVideo
-                                      │
-                                 MMI capture
-```
+(此版本为可用版，将全程镜像MMI屏幕画面，同时缺少针对运动布局的适配，且大屏显示也存在部分遮挡，因测试过程中出现“聪明人”倒卖现象，后续版本暂停更新)
 
-固定职责：
+> **重要：RGI 与 MMI Mirror 是两个独立安装步骤。** 如果需要同时使用 **CarPlay RGI + MMI Mirror**，必须**先安装 CarPlay RGI，再安装 MMI Mirror**。`Install/Update MMI Mirror` 不会代替 CarPlay RGI 的安装；如果未预先安装 RGI，则该流程只安装 MMI Mirror。**此外，部分车机似乎会出现carplay界面花屏现象，如出现此现象，请卸载RGI，单独使用mmi镜像**
 
-```text
-Java/HMI     = Layout/View observer + terminal1/ctx80 sole owner
-Native RGI   = displayable98 pixels only
-Native MMI   = displayable3 pixels only
-ctx80        = {98,101,102,3}
-```
+<img width="1706" height="1279" alt="78c1d9176274d9552a4bd88f9d2273cf" src="https://github.com/user-attachments/assets/97a82434-165c-486f-9cba-3e46c147bc50" />
 
-核心原则：**Java/HMI 控制面统一；Native renderer / 数据源分离；Cluster context 只有一个 writer。**
 
----
 
-## 已冻结的实车基线
+<img width="1920" height="1080" alt="ebcac200dc8a2d82bfc4161e03833d49" src="https://github.com/user-attachments/assets/834a1d7f-2642-43cf-95b6-23eb6f6c184f" />
 
-### V1 / Stage 1
 
-冻结分支：`backup-stage1-mmi-mirror-working-20260905`。
 
-已实车验证：MMI 1024x480 capture、GLES BaseVideo renderer、displayable3、ctx70/display4、STOP 恢复原车。
+https://github.com/user-attachments/assets/6c3c6d34-4d87-4251-b04e-93c984747264
 
-### V2A / NATIVE70
 
-冻结分支：`backup-v2a-vehicle-tested-20260906`；第一轮实车代码基线 `66c805f442b11cf956ff1c0876b05fed72505c6e`。
 
-测试环境：`MHI2Q_CN_AUG22_P0915`，2026-09-06。
+## 主要功能
+
+- **CarPlay Route Guidance（RGI）**
+  - 将 CarPlay 导航的转向、下一操作距离、距离进度、ETA、目的地等路线信息扩展至 Virtual Cockpit / HUD，并支持导航提供的 HUD 车道引导信息。
+  - 支持将 CarPlay 专辑封面转发到 Virtual Cockpit 的媒体界面。
+  - 支持 **MMI 触控板 → DPAD** 输入桥接，可通过触控板滑动操作 CarPlay 菜单。
+- **MMI Mirror**：将 MMI 中控画面实时镜像到 Virtual Cockpit 的地图显示区域。
+- **RGI + MMI Mirror 组合使用**：在已经正确安装 CarPlay RGI 的基础上安装 MMI Mirror，使 RGI 与 MMI 镜像在同一套仪表显示环境中协同工作。
+- **Toolbox 集成**：通过 Green Engineering Menu 完成 RGI 与 MMI Mirror 的安装、更新、日志收集和恢复，并提供 MMI Mirror 的启动、停止与 AutoStart，无需 SSH 执行日常操作。
+- **AutoStart**：支持 MMI 完整开机后自动启动 MMI Mirror，也可切换回手动启动模式。
+- **恢复与诊断**：提供 RGI / MMI Mirror 日志收集、临时日志清理以及恢复 / 卸载流程。
+
+## 安装与使用
+
+如果希望使用 **CarPlay RGI + MMI Mirror**，请严格按照以下顺序安装：
 
 ```text
-Unified JAR + 稳定 RGI           VEHICLE PASS
-Unified JAR + MMI BaseVideo      VEHICLE PASS
-RGI + MMI 共用同一个 JAR          VEHICLE PASS
-displayable3 / ctx70             VEHICLE PASS
-安装 / Start / Stop              VEHICLE PASS
-
-Native ctx70 watchdog            VEHICLE FAIL
-VIEW retention                   VEHICLE FAIL
+安装 CarPlay RGI
+        ↓
+等待至少 30 秒后重启车机 / HMI
+        ↓
+确认 RGI 导航显示与交互正常
+        ↓
+安装 / 更新 MMI Mirror
+        ↓
+重启车机 / HMI
+        ↓
+手动启动 MMI Mirror 并确认正常
+        ↓
+按需开启 AutoStart
 ```
 
-V2A 日志证明 P0915 上 `dmdt gs` 无有效输出，因此 V2.2 不再保留 Native context ownership 路线。
+**不要先安装 MMI Mirror 再安装 RGI。** 组合方案以已经安装并正常工作的 CarPlay RGI 为前置基础。
 
----
+如果只需要 MMI Mirror，不需要 CarPlay RGI，可以跳过 RGI 安装步骤，直接安装 MMI Mirror。
 
-## V2.2 final cleanup
+### 1. 更新 Toolbox
 
-### Native 已变成纯像素层
+将本仓库中的 Toolbox 内容放入 MIB2 High Toolbox 使用的 SD 卡，并按照 Toolbox 的正常更新方式，将新增菜单、脚本和运行文件更新到车机。
 
-final-cleanup 已从 Native 源码和最终 ARM artifact 中删除：
+Toolbox 更新完成后，**先退出 Green Engineering Menu，再重新进入**，使 CarPlay RGI 与 MMI Mirror 页面重新加载。
+
+### 2. 安装 CarPlay RGI
+
+如果需要使用 **RGI + MMI Mirror**，必须先完成本步骤。
+
+重新进入 Green Engineering Menu 后，进入：
 
 ```text
-/eso/bin/apps/dmdt context command path
-route_custom_context / select_context / detect_cluster_context
-reconcile_route / restore_context
-context/display/restore routing CLI
---no-route / --no-context-reconcile migration switches
-Native DisplayStateMachine
-Stage1 context ID table
-legacy main.cpp
-obsolete RGI placeholder interface
+Main > MQBCoding > Customization > CarPlay Route Guidance
 ```
 
-首帧仍保持原有双 submit：
+`CarPlay Route Guidance` 页面提供以下操作：
+
+| 菜单项 | 作用 |
+| --- | --- |
+| `Install/Update CarPlay Route Guidance Interface` | 首次安装或更新 CarPlay RGI。 |
+| `Restore/Uninstall CarPlay Route Guidance Interface` | 卸载 RGI，并恢复安装前保存的相关文件与配置。 |
+| `RESCUE - Force Restore Stock CarPlay / Remove RGI` | 正常恢复流程无法完成时，用于强制恢复原车 CarPlay / 移除 RGI。 |
+| `Copy CarPlay RGI runtime logs to SD-card` | 将 CarPlay RGI 运行日志复制到 SD 卡。 |
+| `Clear CarPlay RGI runtime logs` | 清空当前 RGI 运行日志，后续日志仍会继续写入同一文件。 |
+
+首次安装时，保持 Toolbox SD 卡插入车机，然后选择：
 
 ```text
-draw -> swap -> draw -> swap
+Install/Update CarPlay Route Guidance Interface
 ```
 
-只删除两次 submit 之间在 JAVA80 下已经 no-op 的 Native route 调用。
+本仓库已经将 CarPlay RGI 的部署过程封装到 Toolbox 脚本中。安装程序会检查所需文件、备份车机原始文件与配置，并部署 RGI 所需的 CarPlay hook、仪表转向提示渲染组件、HMI 组件以及相关运行配置。正常使用时无需再通过 SSH 手动逐个复制文件。
 
-### Java 不再有 context.mode 迁移层
-
-已删除：
+安装过程中不要拔出 SD 卡，也不要中断车机供电。等待菜单明确显示安装成功，并出现类似以下提示：
 
 ```text
-/tmp/mmi-mirror-context.mode
-MODE_JAVA80
-readContextMode()
-isCompositeModeRequested()
-lastContextMode
+CarPlay Route Guidance Interface installed successfully
+Please wait at least 30 seconds, then reboot the headunit.
 ```
 
-最终 ownership 条件：
+**安装成功后不要立即强制重启。请至少等待 30 秒，让文件写入和同步完成，再重启车机 / HMI。**
+
+重启完成后连接 iPhone 和 CarPlay，并实际启动一条导航路线进行确认。建议检查 Virtual Cockpit / HUD 路线引导、仪表地图区域转向提示、MMI 触控板操作以及原车地图和方向盘交互是否正常。
+
+只有确认 **CarPlay RGI 已经能够独立正常工作** 后，再继续安装 MMI Mirror。
+
+RGI 安装日志保存在：
 
 ```text
-wantComposite = (BaseVideo active && ready) || RGI frame active
+Backup/<VERSION>/CarPlayRGI/install_carplay_rgi.log
 ```
 
-Java 仍通过 `IDisplayManager` 完成 `ctx72 bounce -> ctx80`、ctx80 drift reconcile 与空闲时 ctx74 release。
+其中 `<VERSION>` 为当前车机固件版本。如果安装过程出现错误或回滚失败提示，请先根据该日志恢复 RGI 状态，不要继续安装 MMI Mirror。
 
-RGI real-maneuver 生命周期也已从旧 `ClusterService.activate/deactivateCustomRendererPipeline()` 的 ctx74/displayable20 gate 解耦：`RendererServer FRAME_READY` 发布 RGI demand，`ClusterStateController` 统一持有/释放 ctx80；`BAPBridge` 不再调用旧 custom-renderer pipeline。
+### 3. 安装 MMI Mirror
 
-### V2.3 geometry-only backport
+如果需要 **RGI + MMI Mirror**，请先确认 CarPlay RGI 已经完成安装、重启，并可以独立正常工作。
 
-为修复 V2.2 与 V2.3 相同的 RGI 箭头位置问题，本分支只回移 V2.3 已验证的 Luka Layout-derived geometry：
+随后进入：
 
 ```text
-CombiMapController
-       ↓
-ClusterStateController view-area seam
-       ↓
-ClusterLayerController / ClusterGeomOverride
-       ↓
-planes 98 / 101 / 102 geometry
+Main > MQBCoding > Customization > MMI Mirror
 ```
 
-该回移**不包含** V2.3 `CarPlayScreenMonitor`、supervisor 或画面检测式自动 Start/Stop。当前 AutoStart 仅是独立的 QNX `startup.sh` 启动器，仍调用与 Green Menu 相同的 V2.2 START 路径。
+`MMI Mirror` 页面提供以下操作：
 
-### 固定 production seam
+| 菜单项 | 作用 |
+| --- | --- |
+| `Install/Update MMI Mirror` | 首次安装或更新 MMI Mirror；不会单独安装 CarPlay RGI。 |
+| `Start MMI Mirror` | 手动启动已经安装好的 MMI Mirror。 |
+| `Stop MMI Mirror` | 停止当前正在运行的 MMI Mirror 会话。 |
+| `AutoStart ON - start after MMI boot` | 开启 MMI Mirror 开机自动启动。 |
+| `AutoStart OFF - manual start only` | 关闭后续开机自启动；不会停止当前已经运行的会话。 |
+| `Copy MMI Mirror diagnostics to SD-card` | 将 MMI Mirror 诊断信息复制到 SD 卡。 |
+| `Clear temporary MMI Mirror logs` | 清理临时 MMI Mirror 日志，不改变当前运行状态。 |
+| `Restore/Uninstall MMI Mirror` | 卸载 MMI Mirror；如检测到 RGI，则恢复组合安装前的稳定 RGI JAR 与 renderer。 |
+
+保持 Toolbox SD 卡插入车机，选择：
 
 ```text
-capture          = 1024x480 / BGRA
-output           = 1440x455
-displayable      = 3
-HMI state        = /tmp/mmi-mirror-hmi.state
-BaseVideo active = /tmp/mmi-mirror-active
-BaseVideo ready  = /tmp/mmi-mirror-basevideo.ready
-context owner    = Java / ctx80
+Install/Update MMI Mirror
 ```
 
-`config.local` 只保留 FPS、capture recover、HMI poll、四组 scale/offset 与日志配置；旧三项 geometry alias 仅作为已有 config 的兼容 fallback。
+该步骤会安装 / 更新 MMI Mirror runtime 和统一 HMI 组件。如果检测到完整的 CarPlay RGI，安装程序还会将 RGI 的仪表转向提示 renderer 切换到 **RGI + MMI Mirror 组合显示**所需的版本；如果未检测到完整 RGI，则不会部署该组合 RGI renderer。
 
----
+**安装完成后必须重启车机 / HMI。** 从 MMI Mirror 安装完成到重启之前，不要启动 MMI Mirror，也不要继续使用或判断 RGI 的显示状态，因为磁盘上的 HMI JAR / renderer 已经完成组合切换，而当前运行中的进程仍可能是重启前的状态。
 
-## Vehicle-candidate artifact set
-
-当前装车候选三件套固定为：
+完成一次完整重启后，再次进入：
 
 ```text
-Toolbox/apps/mmi-mirror/mmi-mirror-display
-Size:   254715 bytes
-SHA256: 987CAB99FB79B5A45C7A63521805429022790031F98E4305B38233E87E8B3638
-
-Toolbox/apps/mmi-mirror/carplay_hook-unified.jar
-Size:   165385 bytes
-SHA256: FA7511B9D6D10BA2A888F03D9B291EF4049FD7DEFA66D4DAF8C56E7C7C4A2C1A
-Git blob: 3111df813e0b0ac0a1378ded83b3e7e04301052c
-Build:  2026-09-08-354f00b-v2.2
-Build source: 354f00bf5710e70f3abfe8c2afffbcff4b462ec5
-
-Toolbox/apps/mmi-mirror/maneuver_render-rgi98
-Size:   113681 bytes
-SHA256: 0EF8A2A70E0AA02F595598960F35D82257F7367EB99ACF37566327038C5A9CD8
+Main > MQBCoding > Customization > MMI Mirror
 ```
 
-Native 继续使用已静态验证的 final-cleanup artifact；Unified JAR 为 V2.2 JAVA80 + geometry-only backport 的重新构建产物；RGI98 本轮源码未改，继续复用此前 verified artifact。三者由 `Toolbox/apps/mmi-mirror/V2.2-SHA256SUMS` 固定校验。
-
-Stable recovery source 始终保持不变：
+然后选择：
 
 ```text
-Toolbox/apps/carplay-rgi/
-  carplay_hook.jar
-  libcarplay_hook.so
-  maneuver_render
-  flag_atlas.rgba
-  Rescue/
+Start MMI Mirror
 ```
 
----
+先使用手动 `Start MMI Mirror` 确认 MMI 镜像与 RGI（如已安装）均正常，再决定是否开启 AutoStart。
 
-## Install / Uninstall ownership
+MMI Mirror 安装日志保存在：
 
 ```text
-RGI native = 3/3
-  -> transactionally snapshot/replace maneuver_render -> displayable98
-  -> install Unified JAR + MMI runtime
-
-RGI native = 0/3
-  -> do not install RGI98 renderer
-  -> install Unified JAR + MMI runtime
-  -> Java ctx80 ownership + MMI displayable3 remain available
-
-RGI native = 1/3 or 2/3
-  -> WARNING
-  -> do not replace maneuver_render
+Backup/<VERSION>/MMIMirror/install_mmi_mirror.log
 ```
 
-Uninstall：
+### 4. 开启 AutoStart
+
+确认 MMI Mirror 可以正常手动启动后，保持 Toolbox SD 卡插入，并选择：
 
 ```text
-RGI native = 0/3
-  -> remove MMI-owned carplay_hook.jar
-
-RGI native > 0
-  -> restore stable RGI carplay_hook.jar
-  -> restore stable displayable20 maneuver_render
+AutoStart ON - start after MMI boot
 ```
 
-安装或卸载后必须 reboot/HMI restart，再使用 RGI 或启动 MMI Mirror。
+AutoStart 会建立持久化启动配置。后续完整 MMI 开机过程中，系统会等待车机运行环境和 MMI Mirror controller 就绪，再自动调用与手动 `Start MMI Mirror` 相同的启动路径。
 
----
+配置成功后，**日常开机自动启动 MMI Mirror 不需要持续插入 SD 卡**。
 
-## 上车自启动
-
-先完成 `Install/Update MMI Mirror V2.2`，可紧接着在 Green Menu 选择 `AutoStart ON`，然后执行安装流程要求的完整重启：
+如需恢复为手动启动模式，选择：
 
 ```text
-AutoStart ON  - 写入带 BEGIN/END 标记的 startup.sh hook
-AutoStart OFF - 删除 hook 与持久 marker，仅保留手动启动
+AutoStart OFF - manual start only
 ```
 
-AutoStart hook 注入 `/etc/boot/startup.sh` 中唯一的 `# DCIVIDEO: Kombi Map` 锚点；找不到或发现多个锚点时会拒绝修改。开机 runner 最多等待 120 秒让已安装 runtime 与 Java controller 就绪，然后调用同一个 `start_mmi_mirror_toolbox.sh`。启动后 60 秒内未出现 BaseVideo ready marker，会自动停止不完整会话。
+`AutoStart OFF` 只关闭后续开机自启动；如果 MMI Mirror 当前已经运行，需要另外执行 `Stop MMI Mirror` 才会停止当前会话。
 
-runtime 已安装到 `/mnt/app/root/mmi-mirror`，因此启用后开机运行不依赖 SD 卡持续插入。`AutoStart OFF` 不停止当前会话；若要立即停止，请另选 `Stop MMI Mirror V2.2`。卸载程序会先清理 AutoStart hook。
+**更新 / 卸载 MMI Mirror，或重新安装 RGI 之前，建议先关闭 AutoStart。** 完成更新、重启并手动确认功能正常后，再重新开启。
 
-诊断文件：
+### 5. 更新
+
+#### 仅更新 MMI Mirror
+
+如果已经开启 AutoStart，先执行：
 
 ```text
-/tmp/mmi-mirror-autostart-bootstrap.log
-/tmp/mmi-mirror-autostart.log
-/tmp/mmi-mirror-autostart.status
-Backup/<firmware>/MMIMirror/AutoStart/
+AutoStart OFF - manual start only
 ```
 
----
-
-## Release verification status
+然后执行：
 
 ```text
-Native source cleanup                 PASS
-Native ARM artifact                   VERIFIED
-Unified Java source cleanup           PASS
-Unified JAR                           VERIFIED
-Geometry-only backport                VERIFIED
-BAPBridge JAVA80 / no legacy ctx74    VERIFIED
-RGI98 renderer                        VERIFIED / unchanged
-Stable RGI recovery baseline          VERIFIED / unchanged
-Install/Uninstall/Rollback simulation PASS
-CI release gate                       PASS / GREEN
-P0915 final ctx80 + geometry vehicle  PENDING
+Install/Update MMI Mirror
 ```
 
-当前发布规则：**候选 artifact 在实车验证前不得再重新编译或替换。** 实车通过后可将 `main` 直接 fast-forward 到该已验证 commit，使 `main` 与上车测试版本保持同一 tree/artifact。
+安装完成后重启车机 / HMI，再手动执行 `Start MMI Mirror` 确认功能正常。需要自动启动时，再重新开启 AutoStart。
 
----
+#### 仅使用 RGI，更新 CarPlay RGI
 
-## Clear Logs / Stop
-
-运行状态文件：
+如果车机只安装了 RGI，没有安装 MMI Mirror，可以直接执行：
 
 ```text
-/tmp/mmi-mirror-controller.started
-/tmp/mmi-mirror-hmi.state
-/tmp/mmi-mirror-active
-/tmp/mmi-mirror-basevideo.ready
+Install/Update CarPlay Route Guidance Interface
 ```
 
-`Clear temporary MMI Mirror logs` 只删除可丢弃日志/self-test/AutoStart 日志，不改变 lifecycle 或 AutoStart 开关状态。需要释放 BaseVideo ownership 时使用 `Stop MMI Mirror V2.2`；Java 根据剩余 RGI demand 决定保留 ctx80 或返回 ctx74。
+安装成功后等待至少 30 秒，再重启车机 / HMI，并确认 RGI 正常。
 
----
+#### 已安装 RGI + MMI Mirror，需要更新 RGI
 
-## 最终实车验证项目
+**不能只更新 RGI 后就继续按原组合状态使用。** MMI Mirror 的组合安装会使用统一 HMI JAR，并在完整 RGI 环境下切换对应 renderer；重新执行 RGI 安装后，需要再次安装 MMI Mirror 才能恢复组合状态。
+
+正确顺序为：
 
 ```text
-1. 使用上述 exact artifact set
-2. Install -> reboot/HMI restart
-3. Unified JAR 正常加载；controller.started 生成
-4. observer 正确产生 CLASSIC/SPORT + FULL/SMALL
-5. MMI displayable3 + BaseVideo ready
-6. Java ctx72 bounce -> ctx80
-7. VIEW 后物理 VC 保持 ctx80
-8. RGI 使用 displayable98
-9. RGI 箭头位置随 FULL/SMALL geometry 正确
-10. RGI real-maneuver 不再触发 legacy ctx74 gate
-11. RGI + MMI 同时存在于 ctx80={98,101,102,3}
-12. route start/stop 无独立 Native context 抢占
-13. MMI stop / capture loss / RGI end 正确释放或保持 ownership
-14. Uninstall -> reboot -> stable RGI20/JAR 恢复
+关闭 MMI Mirror AutoStart（如已开启）
+        ↓
+Install/Update CarPlay Route Guidance Interface
+        ↓
+等待至少 30 秒后重启车机 / HMI
+        ↓
+确认 RGI 独立工作正常
+        ↓
+Install/Update MMI Mirror
+        ↓
+再次重启车机 / HMI
+        ↓
+手动 Start MMI Mirror 并确认组合功能
+        ↓
+按需重新开启 AutoStart
 ```
 
-## 关键文档
+### 6. 日志与故障排查
 
-- [`Toolbox/apps/mmi-mirror/README.md`](Toolbox/apps/mmi-mirror/README.md) — SD payload / lifecycle / artifact manifest
-- [`MMI-Mirror/docs/v2.2-design.md`](MMI-Mirror/docs/v2.2-design.md) — V2.2 final design
-- [`Cluster-HMI/README.md`](Cluster-HMI/README.md) — Unified Java control plane
-- [`MMI-Mirror/docs/v2-stage1.1.md`](MMI-Mirror/docs/v2-stage1.1.md) — V2A 历史归档
-- [`docs/upstream-toolbox-README.md`](docs/upstream-toolbox-README.md) — 原 Toolbox README
+#### CarPlay RGI
+
+RGI 出现导航信息不显示、仪表转向提示异常或 CarPlay 交互异常时，进入：
+
+```text
+Main > MQBCoding > Customization > CarPlay Route Guidance
+```
+
+选择：
+
+```text
+Copy CarPlay RGI runtime logs to SD-card
+```
+
+RGI 运行日志会保存到：
+
+```text
+Backup/<VERSION>/CarPlayRGI/
+```
+
+其中主要包括：
+
+```text
+carplay_hook.log
+maneuver_render.log
+```
+
+需要从空日志重新复现问题时，可以先执行：
+
+```text
+Clear CarPlay RGI runtime logs
+```
+
+该操作清空当前 `/tmp` 中的 RGI 运行日志，后续运行信息会继续写入这些日志文件；不会删除此前已经复制到 SD 卡的日志。
+
+#### MMI Mirror
+
+MMI Mirror 无法启动、启动后退出，或 Virtual Cockpit 镜像显示异常时，进入：
+
+```text
+Main > MQBCoding > Customization > MMI Mirror
+```
+
+选择：
+
+```text
+Copy MMI Mirror diagnostics to SD-card
+```
+
+每次诊断会创建独立的时间戳目录，保存到：
+
+```text
+Backup/<VERSION>/MMIMirror/RuntimeLogs/<TIMESTAMP>/
+```
+
+诊断包不仅包含 MMI Mirror 自身日志，还会尽可能收集当前 CarPlay / RGI 相关日志、运行状态、进程信息和显示管理器快照，便于分析组合显示问题。
+
+需要清理临时 MMI Mirror 日志后重新复现时，可以执行：
+
+```text
+Clear temporary MMI Mirror logs
+```
+
+该操作只清理可丢弃的临时日志和自检残留，**不会停止 MMI Mirror，也不会清除当前生命周期 / 显示状态标记**。需要停止镜像时请使用 `Stop MMI Mirror`。
+
+### 7. 恢复 / 卸载
+
+#### 只移除 MMI Mirror，保留 CarPlay RGI
+
+如果开启过 AutoStart，先执行：
+
+```text
+AutoStart OFF - manual start only
+```
+
+然后选择：
+
+```text
+Restore/Uninstall MMI Mirror
+```
+
+如果检测到 RGI，卸载程序会恢复稳定的 RGI `carplay_hook.jar` 与 `maneuver_render`，并保留 RGI 的其他组件与配置。**卸载完成后必须重启车机 / HMI，再继续使用 RGI。**
+
+#### 同时移除 MMI Mirror 与 CarPlay RGI
+
+组合状态下应按照安装顺序的反向顺序恢复，**不要在 MMI Mirror 仍安装时直接卸载 RGI**。
+
+正确顺序为：
+
+```text
+AutoStart OFF（如已开启）
+        ↓
+Restore/Uninstall MMI Mirror
+        ↓
+重启车机 / HMI
+        ↓
+确认 RGI 已恢复为独立状态
+        ↓
+Restore/Uninstall CarPlay Route Guidance Interface
+        ↓
+等待至少 30 秒
+        ↓
+再次重启车机 / HMI
+```
+
+如果只安装了 RGI，没有安装 MMI Mirror，则可直接执行 `Restore/Uninstall CarPlay Route Guidance Interface`；成功后等待至少 30 秒，再重启车机 / HMI。
+
+只有在正常 RGI 恢复流程无法完成时，才考虑：
+
+```text
+RESCUE - Force Restore Stock CarPlay / Remove RGI
+```
+
+> 本项目会修改车机系统文件。请妥善保留 Toolbox 自动生成的备份，仅用于已经确认兼容的 Audi MHI2Q / MIB2 High 环境，所有操作风险由使用者自行承担。
+
+## Acknowledgements
+
+感谢以下项目和作者提供的基础工作与参考：
+
+- [yuedizhibo / mib2q-MMI-Cockpit-Mirror](https://github.com/yuedizhibo/mib2q-MMI-Cockpit-Mirror) — 本项目 MMI Mirror 部分的主要基础，提供 MIB2Q 中控完整 MMI 画面实时镜像至 Virtual Cockpit 的实现基础。
+- [luka-dev / mib2q-carplay-rgi](https://github.com/luka-dev/mib2q-carplay-rgi) — 本项目 CarPlay RGI、仪表路线引导及 MMI 触控板输入桥接等功能的核心上游基础。
+- [OneB1t / VcMOSTRenderMqb](https://github.com/OneB1t/VcMOSTRenderMqb) — MQB Virtual Cockpit / MOST 自定义渲染研究的重要基础。
+- [fifthBro / mh2p-cluster](https://github.com/fifthBro/mh2p-cluster) — QNX HMI 捕获及 GPU crop / zoom / pan 等实现思路的重要参考。
+- [jilleb / mib2-toolbox](https://github.com/jilleb/mib2-toolbox) — MIB2 High Toolbox、Green Engineering Menu 与部署框架。
+
+各上游文件与组件继续受其原始许可证和版权声明约束。
