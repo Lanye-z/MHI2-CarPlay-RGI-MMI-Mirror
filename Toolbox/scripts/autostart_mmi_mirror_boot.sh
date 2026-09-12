@@ -1,5 +1,5 @@
 #!/bin/sh
-# Boot-time launcher for the installed MMI Mirror runtime.
+# Boot-time launcher for the installed MMI Mirror V2.2 runtime.
 # The startup.sh hook runs this in the background; failure leaves stock routing intact.
 
 export PATH=/proc/boot:/bin:/usr/bin:/usr/sbin:/sbin:/mnt/app/armle/bin:/mnt/app/armle/usr/bin:$PATH
@@ -21,8 +21,39 @@ STATUS="/tmp/mmi-mirror-autostart.status"
 : > "${LOG}"
 exec >> "${LOG}" 2>&1
 
-echo "===== MMI Mirror AutoStart boot runner ====="
+echo "===== MMI Mirror V2.2 AutoStart boot runner ====="
 date
+
+# Sourced helper: boot delay + prerequisite wait. If it is missing (older
+# installation), fall back to an equivalent inline implementation so AutoStart
+# keeps working.
+if [ -f "${SCRIPTDIR}/autostart_wait.sh" ]; then
+    . "${SCRIPTDIR}/autostart_wait.sh"
+else
+    echo "WARN: ${SCRIPTDIR}/autostart_wait.sh missing; using the inline fallback"
+    autostart_delay_seconds() {
+        _raw=${1:-}
+        case "${_raw}" in ''|*[!0-9]*) _raw=20 ;; esac
+        [ "${_raw}" -gt 300 ] && _raw=300
+        echo "${_raw}"
+    }
+    autostart_wait_for_prereqs() {
+        AUTOSTART_WAIT_SECONDS=0
+        _n=0
+        while [ "${_n}" -lt "$2" ]; do
+            [ -f "$3" ] || { AUTOSTART_WAIT_SECONDS=${_n}; return 1; }
+            if [ "${_n}" -ge "$1" ] && [ -f "$4" ] && [ -f "$6" ] && \
+               [ -x "$5" ] && [ -f "$7" ]; then
+                AUTOSTART_WAIT_SECONDS=${_n}
+                return 0
+            fi
+            sleep 1
+            _n=$((_n + 1))
+        done
+        AUTOSTART_WAIT_SECONDS=${_n}
+        return 2
+    }
+fi
 
 is_live_pid() {
     PID="$1"
@@ -50,26 +81,32 @@ write_status() {
     } > "${STATUS}"
 }
 
-N=0
-while [ "${N}" -lt 120 ]; do
-    [ -f "${MARKER}" ] || {
-        write_status "DISABLED" "Persistent AutoStart marker is absent"
-        echo "AutoStart marker is absent; exiting"
-        exit 0
-    }
+# startup.sh can reach the hook before /mnt/app and the HMI Java controller are
+# ready, and - more importantly - before the cluster (DCIVIDEO/Kombi) video path
+# that this hook sits in front of: waitfor_quick isoTX2, devp-iso-mmx-mib2, then
+# start_video_drivers (~+5 s) and start_late_drivers (~+15 s). The Native runtime
+# creates its BaseVideo window exactly once, so starting it before that path is
+# up leaves ctx80 with no visible layer -> black cluster (centre MMI unaffected).
+# Therefore: wait for the installed runtime + Java controller AND for a boot
+# delay counted from the moment this hook fired (MMI_AUTOSTART_DELAY, seconds,
+# 0..300, default 20). Set it to 0 to restore the previous immediate start.
+MMI_AUTOSTART_DELAY=$(autostart_delay_seconds "${MMI_AUTOSTART_DELAY:-20}")
+echo "AutoStart boot delay: ${MMI_AUTOSTART_DELAY}s counted from the hook anchor"
 
-    if [ -f "${START}" ] && [ -x "${BINARY}" ] && [ -f "${LAUNCHER}" ] && \
-       [ -f "${CONTROLLER_MARKER}" ]; then
-        break
-    fi
+autostart_wait_for_prereqs "${MMI_AUTOSTART_DELAY}" 120 "${MARKER}" "${START}" \
+    "${BINARY}" "${LAUNCHER}" "${CONTROLLER_MARKER}"
+WAIT_RC=$?
+N=${AUTOSTART_WAIT_SECONDS}
 
-    sleep 1
-    N=$((N + 1))
-done
+if [ "${WAIT_RC}" -eq 1 ]; then
+    write_status "DISABLED" "Persistent AutoStart marker is absent"
+    echo "AutoStart marker is absent; exiting"
+    exit 0
+fi
 
-if [ "${N}" -ge 120 ]; then
-    write_status "FAILED" "Runtime/controller prerequisites were not ready within 120 seconds"
-    echo "AutoStart timed out waiting for the installed runtime and Java controller"
+if [ "${WAIT_RC}" -eq 2 ]; then
+    write_status "FAILED" "Runtime/controller prerequisites were not ready within 120 seconds (boot delay ${MMI_AUTOSTART_DELAY}s)"
+    echo "AutoStart timed out waiting for the installed runtime and Java controller (boot delay ${MMI_AUTOSTART_DELAY}s)"
     exit 1
 fi
 
@@ -79,8 +116,8 @@ if runtime_active; then
     exit 0
 fi
 
-write_status "STARTING" "Launching the normal Green Menu START path"
-echo "AutoStart prerequisites ready after ${N} seconds"
+write_status "STARTING" "Launching the normal Green Menu START path (boot delay ${MMI_AUTOSTART_DELAY}s)"
+echo "AutoStart prerequisites ready after ${N} seconds (boot delay ${MMI_AUTOSTART_DELAY}s)"
 /bin/sh "${START}"
 START_RC=$?
 if [ "${START_RC}" -ne 0 ]; then
@@ -89,6 +126,8 @@ if [ "${START_RC}" -ne 0 ]; then
     exit "${START_RC}"
 fi
 
+# START verifies that the wrapper survived its first second. Require the real
+# BaseVideo ready marker as the boot-time success gate.
 N=0
 while [ "${N}" -lt 60 ]; do
     [ -f "${MARKER}" ] || {

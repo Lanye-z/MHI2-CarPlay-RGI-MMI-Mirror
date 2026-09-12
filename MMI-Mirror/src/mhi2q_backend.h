@@ -16,7 +16,7 @@ public:
     ~Mhi2qBackend();
 
     /* Create the managed displayable window and EGL surface only.
-     * Native never reads or writes Cluster context. */
+     * V2.2 Native never reads or writes Cluster context. */
     bool init(const Mhi2qBackendConfig &cfg);
     void swap();
     void shutdown();

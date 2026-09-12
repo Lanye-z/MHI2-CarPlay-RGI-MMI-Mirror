@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Prepare the unified carplay_hook.jar source tree.
+"""Prepare the V2.2 unified carplay_hook.jar source tree.
 
 Inputs:
   - pinned Lanye-z/mib2q-carplay-rgi-cn checkout (RGI/Amap business logic)
   - pinned luka-dev/mib2q-carplay-rgi checkout (MHI2Q DisplayManager ownership reference)
 
-keeps the user's RGI business logic, adopts Luka's already-proven MHI2Q
+V2.2 keeps the user's RGI business logic, adopts Luka's already-proven MHI2Q
 context-ownership seam, changes the composite to ctx80={98,101,102,3}, and
 bridges renderer FRAME_READY/teardown into ClusterStateController.
 """
@@ -56,7 +56,7 @@ def patch_display_manager(src):
     constructor_anchor = "        super(iframeworkaccess);\n"
     constructor_inject = (
         "        super(iframeworkaccess);\n"
-        "        /* shared Cluster/HMI control plane: Java owns terminal 1. */\n"
+        "        /* V2.2 shared Cluster/HMI control plane: Java owns terminal 1. */\n"
         "        com.luka.carplay.cluster.ClusterStateController.start(iframeworkaccess);\n"
     )
     text = replace_once(text, constructor_anchor, constructor_inject, "DisplayManager constructor")
@@ -70,7 +70,7 @@ def patch_carplay_hook(src):
     anchor = "        frameworkAccess = extractFramework(context);\n"
     inject = (
         "        frameworkAccess = extractFramework(context);\n"
-        "        /* Unified HMI controller is shared by BaseVideo and RGI. */\n"
+        "        /* V2.2 Unified HMI controller is shared by BaseVideo and RGI. */\n"
         "        com.luka.carplay.cluster.ClusterStateController.start(frameworkAccess);\n"
         "        com.luka.carplay.cluster.ClusterStateController.setCarPlaySessionActive(true);\n"
     )
@@ -236,7 +236,7 @@ def main():
     dst_dm = os.path.join(args.output_src, "de", "audi", "tghu", "fwhmi", "DisplayManagerMIB2High.java")
     write_text(dst_dm, patch_display_manager(luka_dm))
 
-    print("Prepared unified Java source tree: %s" % args.output_src)
+    print("Prepared V2.2 unified Java source tree: %s" % args.output_src)
     print("  RGI source:      %s" % args.rgi_source)
     print("  Luka HMI source: %s" % args.luka_source)
     print("  ctx80 contract:  {98,101,102,3}")

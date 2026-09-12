@@ -1,4 +1,4 @@
-# MHI2Q MMI Mirror / JAVA80 pixel-only Native build
+# MHI2Q MMI Mirror V2.2 / JAVA80 pixel-only Native build
 
 BUILD_DIR ?= build
 TARGET ?= $(BUILD_DIR)/mmi-mirror-display

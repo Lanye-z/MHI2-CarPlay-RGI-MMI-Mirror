@@ -1,0 +1,194 @@
+name: Validate MMI Mirror V2.2 Final Candidate
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - v2.2-final-cleanup
+    paths:
+      - ".github/workflows/promote-unified-hmi-v2a-jar.yml"
+      - ".gitattributes"
+      - "README.md"
+      - "Cluster-HMI/**"
+      - "MMI-Mirror/**"
+      - "Toolbox/GEM/mqb-mmiMirror.esd"
+      - "Toolbox/scripts/*mmi_mirror*"
+      - "Toolbox/apps/mmi-mirror/**"
+      - "Toolbox/apps/carplay-rgi/**"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate V2.2 JAVA80 geometry candidate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository and LFS artifacts
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          fetch-depth: 0
+
+      - name: Validate build/source contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n Cluster-HMI/build_unified_carplay_hook.sh
+          bash -n Toolbox/scripts/autostart_mmi_mirror_boot.sh
+          bash -n Toolbox/scripts/autostart_mmi_mirror_on.sh
+          bash -n Toolbox/scripts/autostart_mmi_mirror_off.sh
+          python3 -m py_compile Cluster-HMI/tools/prepare_unified_sources.py
+          python3 -m py_compile Cluster-HMI/tools/apply_v22_rgi_geometry.py
+
+          B=Cluster-HMI/build_unified_carplay_hook.sh
+          G=Cluster-HMI/tools/apply_v22_rgi_geometry.py
+          C=Cluster-HMI/java_overlay/com/luka/carplay/cluster/ClusterStateController.java
+
+          grep -Fq 'EXPECTED_RGI_REV="${EXPECTED_RGI_REV:-0c77063b824bcb2368740c483e5bbc5204cb0816}"' "$B"
+          grep -Fq 'EXPECTED_LUKA_REV="${EXPECTED_LUKA_REV:-ab93a6c7c6976b667b75133da7f3ef057dd4dce8}"' "$B"
+          grep -Fq 'GEOMETRY_OVERLAY="$SCRIPT_DIR/tools/apply_v22_rgi_geometry.py"' "$B"
+          grep -Fq './com/luka/carplay/cluster/ClusterGeomOverride.java' "$B"
+          grep -Fq './com/luka/carplay/cluster/ClusterLayerController.java' "$B"
+          grep -Fq './de/esolutions/hmi/widgets/audi/evo/high/widgets/CombiMapController.java' "$B"
+          grep -Fq 'No CarPlayScreenMonitor or V2.3 process lifecycle is included.' "$B"
+
+          grep -Fq 'ClusterLayerController' "$G"
+          grep -Fq 'ClusterGeomOverride' "$G"
+          grep -Fq 'CombiMapController' "$G"
+          grep -Fq 'does NOT import any V2.3 CarPlay auto-lifecycle code' "$G"
+
+          grep -Fq 'CTX_STOCK = 74' "$C"
+          grep -Fq 'CTX_BOUNCE = 72' "$C"
+          grep -Fq 'CTX_COMPOSITE = 80' "$C"
+          grep -Fq '(baseActive && baseReady) || rgiPresentationActive' "$C"
+
+          grep -Fq '# DCIVIDEO: Kombi Map' Toolbox/scripts/autostart_mmi_mirror_on.sh
+          grep -Fq '/bin/sh "${START}"' Toolbox/scripts/autostart_mmi_mirror_boot.sh
+          grep -Fq 'mmi-mirror-basevideo.ready' Toolbox/scripts/autostart_mmi_mirror_boot.sh
+          grep -Fq 'autostart_mmi_mirror_off.sh' Toolbox/scripts/uninstall_mmi_mirror.sh
+
+      - name: Verify exact vehicle-candidate artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          N=Toolbox/apps/mmi-mirror/mmi-mirror-display
+          J=Toolbox/apps/mmi-mirror/carplay_hook-unified.jar
+          R=Toolbox/apps/mmi-mirror/maneuver_render-rgi98
+          M=Toolbox/apps/mmi-mirror/V2.2-ARTIFACT-READY
+
+          test "$(wc -c < "$N")" -eq 254715
+          echo '987cab99fb79b5a45c7a63521805429022790031f98e4305b38233e87e8b3638  Toolbox/apps/mmi-mirror/mmi-mirror-display' | sha256sum -c -
+
+          test "$(wc -c < "$J")" -eq 165385
+          echo 'fa7511b9d6d10ba2a888f03d9b291ef4049fd7defa66d4daf8c56e7c7c4a2c1a  Toolbox/apps/mmi-mirror/carplay_hook-unified.jar' | sha256sum -c -
+          test "$(git rev-parse HEAD:"$J")" = '3111df813e0b0ac0a1378ded83b3e7e04301052c'
+
+          test "$(wc -c < "$R")" -eq 113681
+          echo '0ef8a2a70e0aa02f595598960f35d82257f7367eb99acf37566327038c5a9cd8  Toolbox/apps/mmi-mirror/maneuver_render-rgi98' | sha256sum -c -
+
+          (cd Toolbox/apps/mmi-mirror && sha256sum -c V2.2-SHA256SUMS)
+          grep -Fxq 'ArtifactVersion=V2.2' "$M"
+          grep -Fxq 'CandidatePhase=ARTIFACT_VERIFIED_VEHICLE_PENDING' "$M"
+          grep -Fxq 'UnifiedJarSize=165385' "$M"
+          grep -Fxq 'UnifiedJarSHA256=FA7511B9D6D10BA2A888F03D9B291EF4049FD7DEFA66D4DAF8C56E7C7C4A2C1A' "$M"
+          grep -Fxq 'UnifiedJarGitBlob=3111df813e0b0ac0a1378ded83b3e7e04301052c' "$M"
+          grep -Fxq 'BuildSourceHead=354f00bf5710e70f3abfe8c2afffbcff4b462ec5' "$M"
+          grep -Fxq 'BuildID=2026-09-08-354f00b-v2.2' "$M"
+
+      - name: Verify Unified JAR structure and isolation
+        shell: python
+        run: |
+          import collections, struct, zipfile
+          p='Toolbox/apps/mmi-mirror/carplay_hook-unified.jar'
+          required={
+              'com/luka/carplay/CarPlayHook.class',
+              'com/luka/carplay/cluster/ClusterStateController.class',
+              'com/luka/carplay/cluster/ClusterLayerController.class',
+              'com/luka/carplay/cluster/ClusterGeomOverride.class',
+              'com/luka/carplay/routeguidance/RendererServer.class',
+              'com/luka/carplay/routeguidance/AmapV38Compat.class',
+              'com/luka/carplay/routeguidance/BAPBridge.class',
+              'de/audi/tghu/fwhmi/DisplayManagerMIB2High.class',
+              'de/esolutions/hmi/widgets/audi/evo/high/widgets/CombiMapController.class',
+          }
+          with zipfile.ZipFile(p) as z:
+              assert z.testzip() is None
+              names=z.namelist()
+              assert len(names)==101, len(names)
+              assert not [n for n,c in collections.Counter(names).items() if c != 1]
+              classes=[n for n in names if n.endswith('.class')]
+              assert len(classes)==64, len(classes)
+              assert required.issubset(names), required-set(names)
+              assert 'com/luka/carplay/cluster/CarPlayScreenMonitor.class' not in names
+              for n in classes:
+                  b=z.read(n)
+                  assert b[:4]==b'\xca\xfe\xba\xbe', n
+                  assert struct.unpack('>HH',b[4:8])==(0,46), n
+              assert b'2026-09-08-354f00b-v2.2' in z.read('com/luka/carplay/CarPlayHook.class')
+              bap=z.read('com/luka/carplay/routeguidance/BAPBridge.class')
+              assert b'ClusterStateController' in bap
+              assert b'setRgiPresentationActive' in bap
+              assert b'activateCustomRendererPipeline' not in bap
+              assert b'deactivateCustomRendererPipeline' not in bap
+
+      - name: Verify compiled geometry and JAVA80 seams
+        shell: bash
+        run: |
+          set -euo pipefail
+          J=Toolbox/apps/mmi-mirror/carplay_hook-unified.jar
+
+          javap -classpath "$J" -c -p com.luka.carplay.cluster.ClusterLayerController > /tmp/layer.txt
+          grep -Fq 'ClusterStateController.isSmallScreenViewArea' /tmp/layer.txt
+          grep -Fq 'ClusterStateController.isClusterOwned' /tmp/layer.txt
+          grep -Fq 'ClusterStateController.isRgiPresentationActive' /tmp/layer.txt
+
+          javap -classpath "$J" -c -p de.esolutions.hmi.widgets.audi.evo.high.widgets.CombiMapController > /tmp/combi.txt
+          grep -Fq 'ClusterStateController.setViewAreaMode' /tmp/combi.txt
+          grep -Fq 'ClusterStateController.isClusterOwned' /tmp/combi.txt
+
+          javap -classpath "$J" -c -p com.luka.carplay.cluster.ClusterStateController > /tmp/controller.txt
+          grep -Fq 'ClusterLayerController.reapply' /tmp/controller.txt
+
+          javap -classpath "$J" -c -p com.luka.carplay.routeguidance.BAPBridge > /tmp/bap.txt
+          grep -Fq 'ClusterStateController.setRgiPresentationActive' /tmp/bap.txt
+          ! grep -Fq 'ClusterService.activateCustomRendererPipeline' /tmp/bap.txt
+          ! grep -Fq 'ClusterService.deactivateCustomRendererPipeline' /tmp/bap.txt
+
+          javap -classpath "$J" -c -p de.audi.tghu.fwhmi.DisplayManagerMIB2High > /tmp/dm.txt
+          grep -Fq 'ClusterStateController.isClusterOwned' /tmp/dm.txt
+          grep -Fq 'ClusterStateController.isContextWriterThread' /tmp/dm.txt
+
+      - name: Verify Native pixel-only and stable recovery baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          N=Toolbox/apps/mmi-mirror/mmi-mirror-display
+          R=Toolbox/apps/mmi-mirror/maneuver_render-rgi98
+          ! strings "$N" | grep -Eq '/eso/bin/apps/dmdt|dmdt[[:space:]]+(gs|sc|dc)'
+          strings "$N" | grep -Fq 'native_context_routing=removed'
+          ! strings "$R" | grep -Eq 'dmdt[[:space:]]+(gs|sc|dc)|\bpopen\b'
+
+          echo '94d0356d9a12730aca6dd430552c3aaf15ef9021ce3ddee87a760de966f5ad92  Toolbox/apps/carplay-rgi/carplay_hook.jar' | sha256sum -c -
+          echo '87d10f67fbb3dc142642d899977bab0a6eb4009f61d3bcd873d0cce9e01511f7  Toolbox/apps/carplay-rgi/libcarplay_hook.so' | sha256sum -c -
+          echo 'f86c7a44288d55c352837b3432874cf81836431929e625e7cded42d5664e993e  Toolbox/apps/carplay-rgi/maneuver_render' | sha256sum -c -
+
+      - name: Verify release docs match exact candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          for P in README.md Toolbox/apps/mmi-mirror/README.md; do
+            grep -Fq '165385 bytes' "$P"
+            grep -Fq 'FA7511B9D6D10BA2A888F03D9B291EF4049FD7DEFA66D4DAF8C56E7C7C4A2C1A' "$P"
+            grep -Fq '2026-09-08-354f00b-v2.2' "$P"
+            grep -Fq '354f00bf5710e70f3abfe8c2afffbcff4b462ec5' "$P"
+          done
+          grep -Fq 'CarPlayScreenMonitor' README.md
+          grep -Fq '未引入' Toolbox/apps/mmi-mirror/README.md
+
+      - name: Report candidate phase
+        run: |
+          echo 'V2.2 exact artifact, JAVA80 ownership, geometry backport and recovery checks passed.'
+          echo 'P0915 geometry vehicle validation remains pending.'

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Persistently enable MMI Mirror at the proven DCIVIDEO/Kombi Map boot anchor.
+# Persistently enable MMI Mirror V2.2 at the proven DCIVIDEO/Kombi Map boot anchor.
 
 export PATH=/proc/boot:/bin:/usr/bin:/usr/sbin:/sbin:/mnt/app/armle/bin:/mnt/app/armle/usr/bin:$PATH
 
@@ -15,7 +15,7 @@ BOOT_BLOCK="/tmp/mmi_mirror_autostart.block"
 MARKER="${SCRIPTDIR}/.mmi_mirror_autostart"
 RUNNER="${SCRIPTDIR}/autostart_mmi_mirror_boot.sh"
 RUNTIME="/mnt/app/root/mmi-mirror"
-BEGIN_MARK="# MMI MIRROR AUTOSTART BEGIN"
+BEGIN_MARK="# MMI MIRROR V2.2 AUTOSTART BEGIN"
 BACKUP="${VOLUME}/Backup/${VERSION}/MMIMirror/AutoStart"
 STARTUP_BACKUP="${BACKUP}/startup.pre_mmi_mirror_autostart.sh"
 CONFIG_STATUS="${BACKUP}/autostart_config_status.txt"
@@ -24,7 +24,7 @@ mkdir -p "${BACKUP}" || exit 1
 [ -f "${STARTUP}" ] || { echo "Missing ${STARTUP}"; exit 1; }
 [ -f "${RUNNER}" ] || { echo "Missing AutoStart boot runner: ${RUNNER}"; exit 1; }
 [ -x "${RUNTIME}/mmi-mirror-display" ] || {
-    echo "MMI Mirror is not installed. Run Install/Update first."
+    echo "MMI Mirror V2.2 is not installed. Run Install/Update first."
     exit 1
 }
 [ -f "${RUNTIME}/scripts/start_mmi_mirror.sh" ] || {
@@ -50,7 +50,7 @@ write_status() {
 
 remove_boot_block_best_effort() {
     mount -uw /mnt/system 2>/dev/null || return 1
-    sed -i '/^# MMI MIRROR .*AUTOSTART BEGIN$/,/^# MMI MIRROR .*AUTOSTART END$/d' "${STARTUP}" 2>/dev/null
+    sed -i '/# MMI MIRROR V2.2 AUTOSTART BEGIN/,/# MMI MIRROR V2.2 AUTOSTART END/d' "${STARTUP}" 2>/dev/null
     sync
     mount -ur /mnt/system 2>/dev/null
 }
@@ -69,7 +69,9 @@ mount -uw /mnt/system 2>/dev/null || {
     exit 1
 }
 
-sed -i '/^# MMI MIRROR .*AUTOSTART BEGIN$/,/^# MMI MIRROR .*AUTOSTART END$/d' "${STARTUP}" || {
+# Idempotently replace this project's block. Never restore the whole startup.sh,
+# because other Toolbox features may also own independent boot modifications.
+sed -i '/# MMI MIRROR V2.2 AUTOSTART BEGIN/,/# MMI MIRROR V2.2 AUTOSTART END/d' "${STARTUP}" || {
     mount -ur /mnt/system 2>/dev/null
     write_status "FAILED" "Could not remove a previous AutoStart block"
     exit 1
@@ -84,7 +86,7 @@ if [ "${ANCHOR_COUNT}" != "1" ]; then
 fi
 
 cat > "${BOOT_BLOCK}" <<'EOF'
-# MMI MIRROR AUTOSTART BEGIN
+# MMI MIRROR V2.2 AUTOSTART BEGIN
 (
     N=0
     while [ "$N" -lt 120 ]; do
@@ -98,7 +100,7 @@ cat > "${BOOT_BLOCK}" <<'EOF'
     done
     echo "MMI Mirror AutoStart bootstrap timed out waiting for /mnt/app"
 ) >/tmp/mmi-mirror-autostart-bootstrap.log 2>&1 &
-# MMI MIRROR AUTOSTART END
+# MMI MIRROR V2.2 AUTOSTART END
 EOF
 
 sed -i "/# DCIVIDEO: Kombi Map/r ${BOOT_BLOCK}" "${STARTUP}" || {
@@ -119,7 +121,7 @@ case "${ANCHOR_LINE}:${BLOCK_LINE}" in
 esac
 
 if [ "${BLOCK_COUNT}" != "1" ] || [ "${LOCATION_OK}" -ne 1 ]; then
-    sed -i '/^# MMI MIRROR .*AUTOSTART BEGIN$/,/^# MMI MIRROR .*AUTOSTART END$/d' "${STARTUP}" 2>/dev/null
+    sed -i '/# MMI MIRROR V2.2 AUTOSTART BEGIN/,/# MMI MIRROR V2.2 AUTOSTART END/d' "${STARTUP}" 2>/dev/null
     sync
     mount -ur /mnt/system 2>/dev/null
     write_status "FAILED" "AutoStart block placement verification failed"
@@ -160,7 +162,7 @@ mount -ur /mnt/app 2>/dev/null || {
 }
 
 write_status "ENABLED" "Boot hook installed at the DCIVIDEO/Kombi Map anchor"
-echo "MMI Mirror AutoStart ON: enabled."
+echo "MMI Mirror V2.2 AutoStart ON: enabled."
 echo "The installed runtime will start on the next complete MMI boot."
 echo "The SD card is not required for boot-time execution after installation."
 echo "Use 'AutoStart OFF' before removing Toolbox or changing the runtime."

@@ -11,3 +11,4 @@
 /Toolbox/apps/carplay-rgi/carplay_hook.jar -filter -diff -merge -text
 /Toolbox/apps/mmi-mirror/carplay_hook-unified.jar -filter -diff -merge -text
 /Toolbox/apps/mmi-mirror/maneuver_render-rgi98 -filter -diff -merge -text
+/test/*.jar -filter -diff -merge -text

@@ -8,7 +8,7 @@ $QnxRoot = if ($env:QNX650) { $env:QNX650 } else { 'C:\QNX650' }
 $QnxHost = if ($env:QNX_HOST) { $env:QNX_HOST } else { Join-Path $QnxRoot 'host\win32\x86' }
 $QnxTarget = if ($env:QNX_TARGET) { $env:QNX_TARGET } else { Join-Path $QnxRoot 'target\qnx6' }
 
-# is linked with the gcc driver and the QNX ARMv7 static libstdc++ archive.
+# V2.2 is linked with the gcc driver and the QNX ARMv7 static libstdc++ archive.
 # The Native binary owns pixels only; Java owns terminal1/ctx80.
 $Compiler = if ($env:CC) { $env:CC } else { Join-Path $QnxHost 'usr\bin\ntoarmv7-gcc.exe' }
 $StaticStdCpp = if ($env:MMI_STATIC_STDCXX) {
@@ -42,7 +42,7 @@ $Sources = @(
 
 foreach ($Source in $Sources) {
     if (-not (Test-Path $Source)) {
-        throw "source file missing: $Source"
+        throw "V2.2 source file missing: $Source"
     }
 }
 
@@ -62,7 +62,7 @@ $Args = @(
     '-lm'
 )
 
-Write-Host 'MHI2Q MMI Mirror / JAVA80 Native build'
+Write-Host 'MHI2Q MMI Mirror V2.2 / JAVA80 Native build'
 Write-Host "QNX_HOST      = $QnxHost"
 Write-Host "QNX_TARGET    = $QnxTarget"
 Write-Host "Driver        = $Compiler"
@@ -72,7 +72,7 @@ Write-Host ''
 
 & $Compiler @Args
 if ($LASTEXITCODE -ne 0) {
-    throw "QNX build failed with exit code $LASTEXITCODE"
+    throw "QNX V2.2 build failed with exit code $LASTEXITCODE"
 }
 
 Write-Host ''

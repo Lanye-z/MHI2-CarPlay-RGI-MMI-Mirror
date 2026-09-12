@@ -1,5 +1,5 @@
 #!/bin/bash
-# Build the unified carplay_hook.jar containing:
+# Build the V2.2 unified carplay_hook.jar containing:
 #   - the user's current RGI/Amap Java implementation
 #   - ClusterStateController diagnostics + final JAVA80 ownership
 #   - BAPBridge detached from legacy ClusterService ctx74/displayable20 routing
@@ -35,7 +35,7 @@ CLASS_DIR="$BUILD_DIR/classes"
 EMPTY_SOURCEPATH="$BUILD_DIR/empty-sourcepath"
 OUTPUT_JAR="${JAVA_OUTPUT:-$BUILD_DIR/carplay_hook-unified.jar}"
 PREPARE="$SCRIPT_DIR/tools/prepare_unified_sources.py"
-GEOMETRY_OVERLAY="$SCRIPT_DIR/tools/apply_rgi_geometry.py"
+GEOMETRY_OVERLAY="$SCRIPT_DIR/tools/apply_v22_rgi_geometry.py"
 CONTROLLER="$SCRIPT_DIR/java_overlay/com/luka/carplay/cluster/ClusterStateController.java"
 
 fail() { echo "ERROR: $*" >&2; exit 1; }
@@ -52,7 +52,7 @@ fail() { echo "ERROR: $*" >&2; exit 1; }
 [ -f "$OSGI_LIBS/org.osgi.framework-1.10.0.jar" ] || fail "missing OSGi framework jar"
 [ -f "$OSGI_LIBS/org.osgi.util.tracker-1.5.4.jar" ] || fail "missing OSGi tracker jar"
 [ -f "$PREPARE" ] || fail "missing source preparer: $PREPARE"
-[ -f "$GEOMETRY_OVERLAY" ] || fail "missing geometry overlay: $GEOMETRY_OVERLAY"
+[ -f "$GEOMETRY_OVERLAY" ] || fail "missing V2.2 geometry overlay: $GEOMETRY_OVERLAY"
 [ -f "$CONTROLLER" ] || fail "missing controller source: $CONTROLLER"
 command -v git >/dev/null 2>&1 || fail "git is required to verify source revisions"
 
@@ -86,7 +86,7 @@ mkdir -p "$SRC_DIR" "$CLASS_DIR" "$EMPTY_SOURCEPATH" "$(dirname "$OUTPUT_JAR")"
   --controller-source "$CONTROLLER"
 
 # Backport only the V2.3 geometry fix. This adds Luka's current Layout-derived
-# planes 98/101/102 controller and view-area feed to the already-prepared
+# planes 98/101/102 controller and view-area feed to the already-prepared V2.2
 # JAVA80 tree. No CarPlayScreenMonitor or V2.3 process lifecycle is included.
 "$PYTHON" "$GEOMETRY_OVERLAY" \
   --src-dir "$SRC_DIR" \
@@ -115,7 +115,7 @@ PY
   "$PYTHON" "$AMAP_OVERLAY" --java "$AMAP_JAVA"
 fi
 
-BUILD_ID="$(date +%Y-%m-%d)-$(git -C "$ROOT_DIR" rev-parse --short HEAD 2>/dev/null || echo nogit)-"
+BUILD_ID="$(date +%Y-%m-%d)-$(git -C "$ROOT_DIR" rev-parse --short HEAD 2>/dev/null || echo nogit)-v2.2"
 HOOK_FILE="$SRC_DIR/com/luka/carplay/CarPlayHook.java"
 if [ -f "$HOOK_FILE" ]; then
   "$PYTHON" - "$HOOK_FILE" "$BUILD_ID" <<'PY'
@@ -161,7 +161,7 @@ echo "Compiling ${CORE_COUNT} core Java files against real MHI2Q lsd.jar first (
 
 # BAPBridge is part of the pinned RGI patch and calls four ClusterService
 # accessors added by that patch. Compile only BAPBridge with the just-built
-# classes first, then the exact pinned RGI base JAR, then the real
+# V2.2 classes first, then the exact pinned RGI base JAR, then the real
 # lsd.jar for the remaining platform APIs. The core classes above keep
 # real-MHI2Q lsd.jar first for their API gate.
 echo "Compiling BAPBridge against pinned RGI ClusterService API + real MHI2Q platform APIs..."
@@ -181,7 +181,7 @@ cp "$RGI_BASE_JAR" "$OUTPUT_JAR"
 "$JAR" uf "$OUTPUT_JAR" -C "$CLASS_DIR" .
 
 printf '%s\n' \
-  "Built Current: $OUTPUT_JAR" \
+  "Built V2.2: $OUTPUT_JAR" \
   "Build ID: $BUILD_ID" \
   "RGI rev: $RGI_REV" \
   "Luka rev: $LUKA_REV" \
@@ -189,6 +189,6 @@ printf '%s\n' \
   "ownership: JAVA80 / ClusterStateController single writer" \
   "rgi-pipeline: FRAME_READY -> controller; no legacy BAPBridge ctx74 pipeline calls" \
   "rgi-geometry: Luka Layout-derived 98/101/102 geometry backported from V2.3" \
-  "lifecycle: unchanged; no V2.3 CarPlayScreenMonitor/auto lifecycle" \
+  "lifecycle: V2.2 unchanged; no V2.3 CarPlayScreenMonitor/auto lifecycle" \
   "bap-compile: core=real-lsd-first; BAPBridge=pinned-RGI-ClusterService-first" \
   "diagnostics: /tmp/mmi-mirror-controller.log"

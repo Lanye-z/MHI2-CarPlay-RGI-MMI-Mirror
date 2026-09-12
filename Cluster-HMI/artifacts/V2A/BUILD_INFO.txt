@@ -1,0 +1,30 @@
+﻿Unified HMI V2A Candidate
+
+Build:
+2026-09-06-da05480
+
+File:
+carplay_hook-unified.jar
+
+Size:
+148504 bytes
+
+SHA256:
+107449B86FCCEC61EF0BC36BF5FFC5374AE55A4B4CBF2F2889F57C34CC0DCE6E
+
+RGI source baseline:
+0c77063b824bcb2368740c483e5bbc5204cb0816
+
+Luka HMI baseline:
+ab93a6c7c6976b667b75133da7f3ef057dd4dce8
+
+Runtime test stage:
+V2A / NATIVE70
+
+Status:
+Static validation passed.
+Vehicle validation pending.
+
+Important:
+This artifact does not enable final JAVA80 composition by itself.
+Legacy RGI displayable 20 -> 98 migration is still pending.

@@ -8,7 +8,7 @@ int main(int argc,char **argv){
     if(opt.mode==RUN_MODE_NONE){fprintf(stderr,"No mode selected. Use --mmi or --test.\n\n");v2_usage(argv[0]);return 0;}
     v2_install_signal_handlers(); setvbuf(stderr,0,_IOLBF,0);
     fprintf(stderr,
-      "MHI2Q MMI Mirror / JAVA80\n"
+      "MHI2Q MMI Mirror V2.2 / JAVA80\n"
       "mode=%s capture=1024x480/BGRA output=1440x455 displayable=3\n"
       "hmi_poll=%dms capture_recover=%dms context_owner=java native_context_routing=removed\n"
       "final-contract: ctx80={98,101,102,3}; displayable3=BaseVideo, displayable98=RGI\n",

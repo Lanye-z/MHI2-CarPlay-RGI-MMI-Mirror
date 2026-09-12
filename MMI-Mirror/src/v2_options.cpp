@@ -39,7 +39,7 @@ void v2_defaults(Options *o) {
 
 void v2_usage(const char *a) {
     fprintf(stderr,
-      "MHI2Q MMI Mirror / JAVA80\n\n"
+      "MHI2Q MMI Mirror V2.2 / JAVA80\n\n"
       "Usage: %s --mmi [options]\n       %s --test [options]\n\n"
       "Fixed production contract: capture=1024x480/BGRA, output=1440x455, displayable=3, Java owns ctx80.\n"
       "Runtime: --hmi-poll-ms MS --capture-recover-ms MS --fps N\n"

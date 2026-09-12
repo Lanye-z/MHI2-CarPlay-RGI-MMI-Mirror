@@ -56,7 +56,7 @@ int v2_run_test_grid(const Options &opt){
 int v2_run_mmi(const Options &opt){
     set_ready_marker(false);
     MmiCaptureSource capture(opt.capture); VideoFrame frame;
-    fprintf(stderr,"main: JAVA80; Native owns pixels only and contains no Cluster context routing\n");
+    fprintf(stderr,"main: V2.2 JAVA80; Native owns pixels only and contains no Cluster context routing\n");
     fprintf(stderr,"main: waiting for first physical MMI frame before publishing BaseVideo readiness\n");
     if(!acquire_first_frame(&capture,&frame,opt.capture_wait_ms)){fprintf(stderr,"main: no valid MMI frame within %d ms; VC left untouched\n",opt.capture_wait_ms);capture.shutdown();return 3;}
 
@@ -114,6 +114,6 @@ int v2_run_mmi(const Options &opt){
 
     set_ready_marker(false);
     display.shutdown(); capture.shutdown();
-    fprintf(stderr,"state: BaseVideo stopped; Java controller will release ctx80 when no RGI demand remains\n");
+    fprintf(stderr,"state: V2.2 BaseVideo stopped; Java controller will release ctx80 when no RGI demand remains\n");
     return 0;
 }

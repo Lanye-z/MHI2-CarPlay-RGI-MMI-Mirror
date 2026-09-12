@@ -1,7 +1,7 @@
 /*
- * Unified Cluster HMI control plane for Lanye-z/test.
+ * Unified Cluster HMI control plane for Lanye-z/test V2.2.
  *
- * Final contract:
+ * Final V2.2 contract:
  *   - Java/HMI is the single Cluster context owner;
  *   - native renderers own pixels only (displayable 3 / 98);
  *   - ctx80={98,101,102,3};
@@ -84,7 +84,7 @@ public final class ClusterStateController {
                 t.setDaemon(true);
                 t.start();
                 worker = t;
-                Log.i(TAG, "controller started; Java is the sole Cluster context owner");
+                Log.i(TAG, "V2.2 controller started; Java is the sole Cluster context owner");
             } catch (Throwable t) {
                 diag("ERROR worker start failed: " + describe(t));
                 Log.e(TAG, "worker start failed", t);
@@ -269,7 +269,7 @@ public final class ClusterStateController {
     }
 
     /* ============================================================
-     * Final context controller
+     * Final V2.2 context controller
      * ============================================================ */
 
     private static void pollContextPolicy() {
