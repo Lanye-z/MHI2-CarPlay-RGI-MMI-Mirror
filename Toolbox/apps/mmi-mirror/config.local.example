@@ -1,4 +1,4 @@
-# Optional MMI Mirror runtime tuning.
+# Optional MMI Mirror V2.2 runtime tuning.
 # Copy/rename to Toolbox/apps/mmi-mirror/config.local on the SD card if needed.
 # Fixed safety contract (not configurable):
 #   capture 1024x480/BGRA; output 1440x455; displayable3;

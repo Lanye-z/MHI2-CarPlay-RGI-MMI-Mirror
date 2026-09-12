@@ -1,4 +1,4 @@
-# Developer-side MMI Mirror tuning example.
+# Developer-side MMI Mirror V2.2 tuning example.
 # Production safety-critical routing/seam values are deliberately not configurable.
 
 MMI_CAPTURE_FPS=30

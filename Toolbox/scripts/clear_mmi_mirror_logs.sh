@@ -9,6 +9,8 @@ for f in \
     /tmp/mmi-mirror-display.log.1 \
     /tmp/mmi-mirror-controller.log \
     /tmp/mmi-mirror-controller.log.1 \
+    /tmp/mmi-mirror-autostart.log \
+    /tmp/mmi-mirror-autostart-bootstrap.log \
     /tmp/mmi-mirror-install-selftest.log \
     /tmp/mmi-mirror-launcher-selftest-bin.sh \
     /tmp/mmi-mirror-launcher-selftest.log \

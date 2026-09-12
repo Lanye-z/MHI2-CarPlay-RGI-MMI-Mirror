@@ -1,11 +1,11 @@
 #!/bin/sh
-# MMI Mirror / JAVA80 final composite installer for MIB2 Toolbox.
+# MMI Mirror V2.2 / JAVA80 final composite installer for MIB2 Toolbox.
 #
 # Ownership contract:
 # - Java ClusterStateController is the only Cluster context writer.
 # - Native MMI renders displayable3 only.
 # - When stable RGI is complete (3/3), this installer transactionally swaps only
-#   its maneuver_render to the displayable98/no-dmdt renderer.
+#   its maneuver_render to the V2.2 displayable98/no-dmdt renderer.
 # - Stable RGI recovery payloads under Toolbox/apps/carplay-rgi are never modified.
 # - Unified JAR has no hard-coded expected-size gate; copy integrity still uses
 #   source/destination size equality and cksum when available.
@@ -307,7 +307,7 @@ find_payload() {
         fail "Unified HMI JAR missing/invalid or looks like a pointer: ${JAR_SOURCE}"
     fi
     if ! artifact_sane "${RGI98_SOURCE}"; then
-        fail "RGI98 renderer missing/invalid or looks like a pointer: ${RGI98_SOURCE}"
+        fail "V2.2 RGI98 renderer missing/invalid or looks like a pointer: ${RGI98_SOURCE}"
     fi
 
     log "Unified HMI JAR fixed expected-size check: DISABLED (actual $(file_size "${JAR_SOURCE}") bytes)"
@@ -400,7 +400,7 @@ snapshot_rgi_renderer() {
 
 trap 'fail "Installation interrupted by signal"' 1 2 15
 
-log "===== MMI Mirror / JAVA80 install/update started ====="
+log "===== MMI Mirror V2.2 / JAVA80 install/update started ====="
 log "Firmware: ${VERSION}"
 log "FAZIT: ${FAZIT}"
 log "Runtime target: ${APP_TARGET}"
@@ -453,10 +453,10 @@ if [ "${RGI_NATIVE_COUNT}" -eq 3 ]; then
     RGI98_DEPLOYED=1
 elif [ "${RGI_NATIVE_COUNT}" -eq 0 ]; then
     RGI98_DEPLOYED=0
-    log "RGI native payload state: absent (0/3); RGI98 renderer will not be installed"
+    log "RGI native payload state: absent (0/3); V2.2 RGI98 renderer will not be installed"
 else
     RGI98_DEPLOYED=0
-    log "WARNING: RGI native payload state is partial (${RGI_NATIVE_COUNT}/3); will not replace maneuver_render"
+    log "WARNING: RGI native payload state is partial (${RGI_NATIVE_COUNT}/3); V2.2 will not replace maneuver_render"
 fi
 
 log "Building staged MMI runtime"
@@ -477,7 +477,7 @@ elif [ -f "${APP_TARGET}/config.local" ]; then
 fi
 
 {
-    echo "MMI Mirror / JAVA80 final composite"
+    echo "MMI Mirror V2.2 / JAVA80 final composite"
     echo "Firmware=${VERSION}"
     echo "FAZIT=${FAZIT}"
     echo "Installed=$(date)"
@@ -544,20 +544,20 @@ cleanup_launcher_selftest
 log "Launcher shell self-test passed (zero-argument QNX /bin/sh; no display routing performed)"
 
 if [ "${RGI98_DEPLOYED}" -eq 1 ]; then
-    log "Replacing complete stable RGI maneuver_render with displayable98 renderer"
+    log "Replacing complete stable RGI maneuver_render with V2.2 displayable98 renderer"
     snapshot_rgi_renderer
     rm -f "${RGI_NATIVE_2}.mmi-mirror.tmp" 2>/dev/null || true
     copy_checked "${RGI98_SOURCE}" "${RGI_NATIVE_2}.mmi-mirror.tmp" 755
-    mv "${RGI_NATIVE_2}.mmi-mirror.tmp" "${RGI_NATIVE_2}" || fail "Could not activate RGI98 renderer"
-    log "RGI98 renderer installed as ${RGI_NATIVE_2} ($(file_size "${RGI_NATIVE_2}") bytes)"
+    mv "${RGI_NATIVE_2}.mmi-mirror.tmp" "${RGI_NATIVE_2}" || fail "Could not activate V2.2 RGI98 renderer"
+    log "V2.2 RGI98 renderer installed as ${RGI_NATIVE_2} ($(file_size "${RGI_NATIVE_2}") bytes)"
 fi
 
-log "Replacing LSD carplay_hook.jar with Unified HMI candidate (fixed expected-size gate disabled)"
+log "Replacing LSD carplay_hook.jar with V2.2 Unified HMI candidate (fixed expected-size gate disabled)"
 snapshot_carplay_jar
 rm -f "${JAR_TARGET}.mmi-mirror.tmp" 2>/dev/null || true
 copy_checked "${JAR_SOURCE}" "${JAR_TARGET}.mmi-mirror.tmp" 644
-mv "${JAR_TARGET}.mmi-mirror.tmp" "${JAR_TARGET}" || fail "Could not activate Unified HMI JAR"
-log "Unified HMI JAR installed as ${JAR_TARGET} ($(file_size "${JAR_TARGET}") bytes)"
+mv "${JAR_TARGET}.mmi-mirror.tmp" "${JAR_TARGET}" || fail "Could not activate V2.2 Unified HMI JAR"
+log "V2.2 Unified HMI JAR installed as ${JAR_TARGET} ($(file_size "${JAR_TARGET}") bytes)"
 
 sync || fail "sync failed"
 
@@ -577,17 +577,17 @@ else
 fi
 trap - 1 2 15
 
-log "MMI Mirror / JAVA80 final composite installed successfully."
+log "MMI Mirror V2.2 / JAVA80 final composite installed successfully."
 if [ "${RGI98_DEPLOYED}" -eq 1 ]; then
-    log "RGI complete (3/3): maneuver_render was transactionally migrated from stable displayable20 to displayable98."
+    log "RGI complete (3/3): maneuver_render was transactionally migrated from stable displayable20 to V2.2 displayable98."
 else
     log "RGI renderer was not modified because stable RGI was not complete (3/3)."
 fi
 log "Stable RGI recovery payloads in Toolbox/apps/carplay-rgi were not modified."
 log "IMPORTANT: reboot/HMI restart is REQUIRED before starting MMI Mirror or judging RGI/ctx80 behavior."
 log "Do not use RGI or Start MMI Mirror between this install and the reboot, because on-disk JAR/renderer have changed together."
-log "After reboot use Green Menu 'Start MMI Mirror'."
+log "After reboot use Green Menu 'Start MMI Mirror V2.2'."
 log "Runtime logs: /tmp/mmi-mirror-display.log (+ .1 rotation)"
 log "Install log: Backup/${VERSION}/MMIMirror/install_mmi_mirror.log"
-log "===== MMI Mirror / JAVA80 install/update finished ====="
+log "===== MMI Mirror V2.2 / JAVA80 install/update finished ====="
 exit 0

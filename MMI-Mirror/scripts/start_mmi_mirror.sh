@@ -1,5 +1,5 @@
 #!/bin/sh
-# MMI Mirror production launcher.
+# MMI Mirror V2.2 production launcher.
 # Final contract: Java owns terminal1/ctx80; Native renders displayable3 pixels only.
 # Keep QNX /bin/sh compatibility: no set -e/set -u.
 
@@ -54,7 +54,7 @@ MMI_SPORT_SMALL_OFFSET_X="${MMI_SPORT_SMALL_OFFSET_X:-$LEGACY_X}"
 MMI_SPORT_SMALL_OFFSET_Y="${MMI_SPORT_SMALL_OFFSET_Y:-$LEGACY_Y}"
 
 # Old config.local files may still contain retired routing/seam variables.
-# intentionally ignores them: the binary has no Native context-routing path
+# V2.2 intentionally ignores them: the binary has no Native context-routing path
 # and the Java/Native seam paths are fixed.
 rm -f "$READY_MARKER" 2>/dev/null || true
 echo "$$" > "$ACTIVE_MARKER" 2>/dev/null || true
@@ -62,13 +62,13 @@ trap 'rm -f "$ACTIVE_MARKER" "$READY_MARKER" 2>/dev/null || true' 0 1 2 15
 
 {
     echo ""
-    echo "===== $(date) MMI MIRROR  JAVA80 FINAL ====="
+    echo "===== $(date) MMI MIRROR V2.2 / JAVA80 FINAL ====="
     echo "capture=1024x480 format=BGRA fps=$MMI_CAPTURE_FPS recover_ms=$MMI_CAPTURE_RECOVER_MS"
     echo "displayable=3 output=1440x455 native_context_routing=removed"
     echo "hmi_state=/tmp/mmi-mirror-hmi.state hmi_poll_ms=$MMI_HMI_POLL_MS basevideo_ready=$READY_MARKER"
     echo "context_owner=JAVA ctx80={98,101,102,3}"
     echo "profiles: CF=${MMI_CLASSIC_FULL_SCALE}@(${MMI_CLASSIC_FULL_OFFSET_X},${MMI_CLASSIC_FULL_OFFSET_Y}) CS=${MMI_CLASSIC_SMALL_SCALE}@(${MMI_CLASSIC_SMALL_OFFSET_X},${MMI_CLASSIC_SMALL_OFFSET_Y}) SF=${MMI_SPORT_FULL_SCALE}@(${MMI_SPORT_FULL_OFFSET_X},${MMI_SPORT_FULL_OFFSET_Y}) SS=${MMI_SPORT_SMALL_SCALE}@(${MMI_SPORT_SMALL_OFFSET_X},${MMI_SPORT_SMALL_OFFSET_Y})"
-    echo "Starting foreground MMI mirror."
+    echo "Starting V2.2 foreground MMI mirror."
     echo "Log: $LOG (max ${LOG_MAX_BYTES} bytes + one .1 copy)"
 
     "$BIN" \

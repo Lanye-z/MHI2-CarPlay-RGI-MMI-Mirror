@@ -35,7 +35,7 @@ bool ClusterVideoDisplay::init(const Mhi2qBackendConfig &cfg) {
 bool ClusterVideoDisplay::present_uploaded_frame() {
     if (!ready_) return false;
 
-    /* Preserve the vehicle-tested first-frame timing from V2A/. The old
+    /* Preserve the vehicle-tested first-frame timing from V2A/V2.2. The old
      * no-op Native route call sat between these two submits; only that call is removed. */
     renderer_.draw();
     backend_.swap();

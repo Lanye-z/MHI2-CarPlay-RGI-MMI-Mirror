@@ -1,7 +1,7 @@
 ###########################################################################################
 #
 # Custom Green Engineering Menu screen
-# MMI Mirror
+# MMI Mirror V2.2 / JAVA80 composite validation
 #
 ###########################################################################################
 #
@@ -12,25 +12,30 @@ screen "MMI Mirror" Customization
 
 keyValue
     value   String sys 0x00000000 0
-    label   "Audi MHI2Q MMI Mirror"
+    label   "Audi MHI2Q MMI Mirror V2.2 / Unified Cluster"
     poll    0
 
 keyValue
     value   String sys 0x00000000 0
-    label   "For RGI + MMI Mirror, install CarPlay RGI first"
+    label   "JAVA80: ctx80 = {98,101,102,3}; Native displayable 3 only"
+    poll    0
+
+keyValue
+    value   String sys 0x00000000 0
+    label   "Luka-style context lock + Layout/View observer diagnostics"
     poll    0
 
 script
    value   sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/install_mmi_mirror.sh"
-   label   "Install/Update MMI Mirror"
+   label   "Install/Update MMI Mirror V2.2"
 
 script
    value   sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/start_mmi_mirror_toolbox.sh"
-   label   "Start MMI Mirror"
+   label   "Start MMI Mirror V2.2"
 
 script
    value   sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/stop_mmi_mirror_toolbox.sh"
-   label   "Stop MMI Mirror"
+   label   "Stop MMI Mirror V2.2"
 
 script
    value   sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/autostart_mmi_mirror_on.sh"
@@ -42,7 +47,7 @@ script
 
 script
    value   sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/collect_mmi_mirror_logs.sh"
-   label   "Copy MMI Mirror diagnostics to SD-card"
+   label   "Copy V2.2 diagnostics to SD-card"
 
 script
    value   sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/clear_mmi_mirror_logs.sh"
@@ -50,4 +55,4 @@ script
 
 script
    value   sys 1 0x0100 "/eso/hmi/engdefs/scripts/mqb/uninstall_mmi_mirror.sh"
-   label   "Restore/Uninstall MMI Mirror"
+   label   "Restore/Uninstall MMI Mirror V2.2"

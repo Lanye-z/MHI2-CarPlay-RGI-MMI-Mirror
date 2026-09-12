@@ -2,7 +2,7 @@ param(
     [string]$QnxRoot = "C:\QNX650",
     [string]$RgiSource = "D:\github\mib2q-carplay-rgi-cn",
     [string]$LukaSource = "D:\github\mib2q-carplay-rgi",
-    [string]$Output = (Join-Path $PSScriptRoot "..\build-rgi\maneuver_render"),
+    [string]$Output = (Join-Path $PSScriptRoot "..\build-v22\maneuver_render"),
     [switch]$PromoteToToolbox
 )
 
@@ -30,7 +30,7 @@ $env:PATH = "$qnxBin;$env:PATH"
 $compiler = Join-Path $qnxBin "ntoarmv7-gcc.exe"
 if (-not (Test-Path -LiteralPath $compiler)) { throw "QNX ARMv7 compiler not found: $compiler" }
 
-$work = Join-Path $PSScriptRoot "..\build-rgi\rgi-src"
+$work = Join-Path $PSScriptRoot "..\build-v22\rgi-src"
 Remove-Item -LiteralPath $work -Recurse -Force -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Path $work -Force | Out-Null
 
@@ -56,8 +56,8 @@ Set-Content -LiteralPath $platformHeaderPath -Value $platformHeader -Encoding AS
 $protocolPath = Join-Path $work "protocol.h"
 $protocol = Get-Content -LiteralPath $protocolPath -Raw
 $before = $protocol
-$protocol = $protocol -replace '(?m)^#define\s+CR_DISPLAYABLE_ID\s+20\b.*$', '#define CR_DISPLAYABLE_ID   98  /* Current: dedicated managed RGI overlay plane */'
-$protocol = $protocol -replace '(?m)^#define\s+CR_CONTEXT_ID\s+74\b.*$', '#define CR_CONTEXT_ID       80  /* Current: Java-owned composite context */'
+$protocol = $protocol -replace '(?m)^#define\s+CR_DISPLAYABLE_ID\s+20\b.*$', '#define CR_DISPLAYABLE_ID   98  /* V2.2: dedicated managed RGI overlay plane */'
+$protocol = $protocol -replace '(?m)^#define\s+CR_CONTEXT_ID\s+74\b.*$', '#define CR_CONTEXT_ID       80  /* V2.2: Java-owned composite context */'
 if ($protocol -eq $before -or $protocol -notmatch 'CR_DISPLAYABLE_ID\s+98' -or $protocol -notmatch 'CR_CONTEXT_ID\s+80') {
     throw "Could not patch RGI protocol IDs to displayable98/context80"
 }
@@ -149,7 +149,7 @@ $arguments = @(
     "-lm"
 )
 
-Write-Host "=== Building RGI renderer ==="
+Write-Host "=== Building V2.2 RGI renderer ==="
 Write-Host "RGI business/render source: $ExpectedRgi"
 Write-Host "Luka QNX plane98 backend:   $ExpectedLuka"
 Write-Host "Contract: displayable98 / context80 informational / NO dmdt"
@@ -163,10 +163,10 @@ $hash | Select-Object Algorithm, Hash, Path
 
 if ($PromoteToToolbox) {
     $repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot "..\.."))
-    # experimental renderer belongs to MMI Mirror. Never overwrite the
+    # V2.2 experimental renderer belongs to MMI Mirror. Never overwrite the
     # stable displayable20 recovery renderer under Toolbox/apps/carplay-rgi.
     $dst = Join-Path $repoRoot "Toolbox\apps\mmi-mirror\maneuver_render-rgi98"
     Copy-Item -LiteralPath $outputPath -Destination $dst -Force
-    Write-Host "Promoted RGI renderer to MMI-owned path: $dst"
+    Write-Host "Promoted V2.2 RGI renderer to MMI-owned path: $dst"
     Write-Warning "Stable Toolbox/apps/carplay-rgi/maneuver_render remains the uninstall/rescue recovery source."
 }

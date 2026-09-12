@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Backport the V2.3 Luka-derived RGI geometry fix onto the JAVA80 build.
+"""Backport the V2.3 Luka-derived RGI geometry fix onto the V2.2 JAVA80 build.
 
 This intentionally does NOT import any V2.3 CarPlay auto-lifecycle code.
 It only adds the same Layout-derived planes 98/101/102 geometry path that was
@@ -9,7 +9,7 @@ vehicle-tested in V2.3:
   - CombiMapController
   - the minimal ClusterStateController seams required by those classes
 
-The input source tree is the already-prepared build copy. All edits are
+The input source tree is the already-prepared V2.2 build copy. All edits are
 anchor-checked so source drift fails loudly instead of producing a partial JAR.
 """
 
@@ -53,7 +53,7 @@ def replace_required(text, old, new, label, minimum=1):
 
 
 def patch_cluster_layer(src):
-    """Adapt Luka's current 98/101/102 geometry controller to JAVA80."""
+    """Adapt Luka's current 98/101/102 geometry controller to V2.2 JAVA80."""
     text = read_text(src)
     text = replace_required(
         text,
@@ -75,7 +75,7 @@ def patch_cluster_layer(src):
 
 
 def patch_combi_map(src):
-    """Keep Luka's stock-layout geometry feed but route state to JAVA80."""
+    """Keep Luka's stock-layout geometry feed but route state to V2.2 JAVA80."""
     text = read_text(src)
     text = replace_required(
         text,
@@ -101,7 +101,7 @@ def patch_combi_map(src):
 
 
 def patch_cluster_state_controller(src):
-    """Add only the seams required by Luka geometry; keep context policy."""
+    """Add only the seams required by Luka geometry; keep V2.2 context policy."""
     text = read_text(src)
 
     anchor = (
@@ -211,7 +211,7 @@ def patch_cluster_state_controller(src):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--src-dir", required=True,
-                   help="already-prepared unified Java source tree")
+                   help="already-prepared V2.2 unified Java source tree")
     p.add_argument("--luka-source", required=True,
                    help="pinned luka-dev/mib2q-carplay-rgi checkout")
     args = p.parse_args()
@@ -228,7 +228,7 @@ def main():
         args.src_dir, "com", "luka", "carplay", "cluster", "ClusterStateController.java")
 
     required = (
-        (controller, "prepared ClusterStateController"),
+        (controller, "prepared V2.2 ClusterStateController"),
         (luka_layers, "Luka ClusterLayerController"),
         (luka_geom, "Luka ClusterGeomOverride"),
         (luka_combi, "Luka CombiMapController"),
@@ -249,9 +249,9 @@ def main():
         "widgets", "CombiMapController.java")
     write_text(dst_combi, patch_combi_map(luka_combi))
 
-    print("Applied RGI geometry backport to: %s" % args.src_dir)
+    print("Applied V2.2 RGI geometry backport to: %s" % args.src_dir)
     print("  geometry: Luka Layout-derived planes 98/101/102")
-    print("  ownership: existing JAVA80 / ClusterStateController")
+    print("  ownership: existing V2.2 JAVA80 / ClusterStateController")
     print("  lifecycle: unchanged (no V2.3 CarPlayScreenMonitor or auto lifecycle)")
 
 

@@ -1,6 +1,6 @@
 #!/bin/sh
-# Start the installed MMI Mirror runtime without SSH.
-# Manual start remains intentional; no OEM startup file is modified.
+# Start the installed MMI Mirror V2.2 runtime without SSH.
+# Shared entry point for the Green Menu action and the optional boot AutoStart runner.
 
 export PATH=/proc/boot:/bin:/usr/bin:/usr/sbin:/sbin:/mnt/app/armle/bin:/mnt/app/armle/usr/bin:$PATH
 
@@ -21,16 +21,16 @@ is_live_pid() {
 if [ -f "${PIDFILE}" ]; then
     OLD_PID=$(cat "${PIDFILE}" 2>/dev/null || echo "")
     if is_live_pid "${OLD_PID}"; then
-        echo "MMI Mirror already appears to be running (wrapper PID ${OLD_PID})."
-        echo "Use 'Stop MMI Mirror' before starting another session."
+        echo "MMI Mirror V2.2 already appears to be running (wrapper PID ${OLD_PID})."
+        echo "Use 'Stop MMI Mirror V2.2' before starting another session."
         exit 0
     fi
     rm -f "${PIDFILE}" 2>/dev/null || true
 fi
 
 if [ ! -d "${RUNTIME}" ]; then
-    echo "ERROR: MMI Mirror runtime directory is missing: ${RUNTIME}"
-    echo "Run 'Install/Update MMI Mirror' again."
+    echo "ERROR: MMI Mirror V2.2 runtime directory is missing: ${RUNTIME}"
+    echo "Run 'Install/Update MMI Mirror V2.2' again."
     exit 1
 fi
 if [ ! -f "${BINARY}" ]; then
@@ -42,7 +42,7 @@ if [ ! -x "${BINARY}" ]; then
     exit 1
 fi
 if [ ! -f "${START_SCRIPT}" ]; then
-    echo "ERROR: Missing runtime launcher: ${START_SCRIPT}"
+    echo "ERROR: Missing V2.2 runtime launcher: ${START_SCRIPT}"
     exit 1
 fi
 
@@ -57,7 +57,7 @@ echo "${WRAPPER_PID}" > "${PIDFILE}" 2>/dev/null || true
 
 sleep 1
 if is_live_pid "${WRAPPER_PID}"; then
-    echo "MMI Mirror started. Wrapper PID: ${WRAPPER_PID}"
+    echo "MMI Mirror V2.2 started. Wrapper PID: ${WRAPPER_PID}"
     echo "Runtime log: ${LOG}"
     echo "BaseVideo: displayable 3; Native context routing removed."
     echo "Cluster ownership: Java -> ctx80={98,101,102,3}."
@@ -66,6 +66,6 @@ if is_live_pid "${WRAPPER_PID}"; then
 fi
 
 rm -f "${PIDFILE}" 2>/dev/null || true
-echo "ERROR: MMI Mirror exited during startup."
+echo "ERROR: MMI Mirror V2.2 exited during startup."
 echo "Use 'Copy MMI Mirror diagnostics to SD-card' and inspect ${LOG}."
 exit 1

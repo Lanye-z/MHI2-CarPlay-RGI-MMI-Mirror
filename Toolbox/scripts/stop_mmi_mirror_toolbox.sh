@@ -1,6 +1,6 @@
 #!/bin/sh
-# Gracefully stop MMI Mirror.
-# has one Cluster context writer: Java ClusterStateController.
+# Gracefully stop MMI Mirror V2.2.
+# V2.2 has one Cluster context writer: Java ClusterStateController.
 # Native has no Cluster context-routing path; withdrawing BaseVideo lifecycle
 # lets Java release ctx80 back to stock ctx74 unless RGI still needs it.
 
@@ -26,7 +26,7 @@ remaining_mmi_processes() {
     pidin ar 2>/dev/null | grep '[m]mi-mirror-display' || true
 }
 
-echo "Stopping MMI Mirror (JAVA80)..."
+echo "Stopping MMI Mirror V2.2 (JAVA80)..."
 
 # Keep the V1/V2A vehicle-proven termination path. Do not infer process state
 # from slay's exit status: on QNX that status is not a reliable presence test.
@@ -62,5 +62,5 @@ if command -v pidin >/dev/null 2>&1; then
     fi
 fi
 
-echo "MMI Mirror stop request completed; Java controller owns stock/composite release."
+echo "MMI Mirror V2.2 stop request completed; Java controller owns stock/composite release."
 exit 0

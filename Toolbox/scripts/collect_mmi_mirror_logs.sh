@@ -1,5 +1,5 @@
 #!/bin/sh
-# Collect MMI Mirror runtime + Java ownership + CarPlay/RGI diagnostics to SD-card.
+# Collect MMI Mirror V2.2 runtime + Java ownership + CarPlay/RGI diagnostics to SD-card.
 
 export PATH=/proc/boot:/bin:/usr/bin:/usr/sbin:/sbin:/mnt/app/media/gracenote/bin:/mnt/app/armle/bin:/mnt/app/armle/usr/bin:$PATH
 export IPL_CONFIG_DIR="${IPL_CONFIG_DIR:-/etc/eso/production}"
@@ -47,7 +47,7 @@ copy_optional() {
     return 1
 }
 
-echo "===== Collecting MMI Mirror diagnostics ====="
+echo "===== Collecting MMI Mirror V2.2 diagnostics ====="
 echo "Firmware: ${VERSION}"
 echo "FAZIT: ${FAZIT}"
 echo "Destination: ${LOGFOLDER}"
@@ -60,6 +60,9 @@ copy_optional "/tmp/mmi-mirror-controller.started" "mmi-mirror-controller.starte
 copy_optional "/tmp/mmi-mirror-hmi.state" "mmi-mirror-hmi.state"
 copy_optional "/tmp/mmi-mirror-active" "mmi-mirror-active"
 copy_optional "/tmp/mmi-mirror-basevideo.ready" "mmi-mirror-basevideo.ready"
+copy_optional "/tmp/mmi-mirror-autostart.log" "mmi-mirror-autostart.log"
+copy_optional "/tmp/mmi-mirror-autostart-bootstrap.log" "mmi-mirror-autostart-bootstrap.log"
+copy_optional "/tmp/mmi-mirror-autostart.status" "mmi-mirror-autostart.status"
 
 # Unified CarPlay Java / RGI logs.  Different RGI revisions use slightly
 # different logging layouts, so collect every known file opportunistically.
@@ -75,12 +78,17 @@ copy_optional "${RUNTIME}/config.local" "config.local"
 
 SYSTEM_TMP="${LOGFOLDER}/system_info.txt.tmp"
 {
-    echo "===== MMI Mirror system info ====="
+    echo "===== MMI Mirror V2.2 system info ====="
     date
     echo "Firmware=${VERSION}"
     echo "FAZIT=${FAZIT}"
     echo "Runtime=${RUNTIME}"
     echo "Architecture=JAVA80 ctx80={98,101,102,3}; Native context routing removed"
+    echo "AutoStartMarker=$([ -f "${SCRIPTDIR}/.mmi_mirror_autostart" ] && echo present || echo absent)"
+    if [ -f /etc/boot/startup.sh ]; then
+        AUTOSTART_HOOK_COUNT=$(grep -cF '# MMI MIRROR V2.2 AUTOSTART BEGIN' /etc/boot/startup.sh 2>/dev/null || true)
+        echo "AutoStartHookCount=${AUTOSTART_HOOK_COUNT:-0}"
+    fi
     echo
     echo "===== Relevant /tmp files ====="
     ls -l /tmp/mmi-mirror* /tmp/carplay* /tmp/maneuver* 2>&1 || true
@@ -133,10 +141,10 @@ mv "${GC_TMP}" "${LOGFOLDER}/dmdt_gc.txt" 2>/dev/null || RESULT=1
 sync || { echo "ERROR: sync failed"; RESULT=1; }
 
 if [ "${RESULT}" -eq 0 ]; then
-    echo "MMI Mirror diagnostics collected successfully."
+    echo "MMI Mirror V2.2 diagnostics collected successfully."
 else
-    echo "MMI Mirror diagnostics collection completed with one or more copy errors."
+    echo "MMI Mirror V2.2 diagnostics collection completed with one or more copy errors."
 fi
 echo "Saved under: Backup/${VERSION}/MMIMirror/RuntimeLogs/${STAMP}"
-echo "===== MMI Mirror diagnostics collection finished ====="
+echo "===== MMI Mirror V2.2 diagnostics collection finished ====="
 exit "${RESULT}"
